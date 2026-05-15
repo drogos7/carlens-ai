@@ -43,7 +43,7 @@ See [backend/knowledge/BRANDS.md](backend/knowledge/BRANDS.md) for adding new br
 
 ### Backend
 
-Uses **Python 3.12** (`environment.yml` at repo root for Anaconda/GitHub CI using `conda env update`; local dev can use `venv` + `pip` as below).
+Use **Python 3.11+** (3.12 recommended); install dependencies with `pip` inside a virtual environment.
 
 ```powershell
 cd backend
