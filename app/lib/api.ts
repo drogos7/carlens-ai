@@ -30,6 +30,26 @@ export type DtcDecodeResponse = {
   segments: DecodeSegment[];
 };
 
+export type CodeDependency = {
+  from_code: string;
+  to_code: string;
+  relation: 'root_cause' | 'symptom' | 'related' | 'same_system';
+  explanation: string;
+};
+
+export type DetectedCodeEntry = {
+  code: string;
+  title?: string | null;
+  description?: string | null;
+  probable_causes?: string[];
+  symptoms?: string[];
+  step_by_step_fix?: string[];
+  difficulty?: 'Easy' | 'Medium' | 'Hard' | null;
+  safety_warning?: string | null;
+  in_database: boolean;
+  brand_slug?: string | null;
+};
+
 export type AnalyzeResponse = {
   scan_type?: 'dtc' | 'vin';
   detected_code: string;
@@ -40,6 +60,8 @@ export type AnalyzeResponse = {
   vehicle_year?: number | null;
   vin_decode?: VinDecodeResponse | null;
   dtc_decode?: DtcDecodeResponse | null;
+  additional_codes?: DetectedCodeEntry[];
+  dependencies?: CodeDependency[];
   probable_cause: string;
   step_by_step_fix: string[];
   estimated_difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -151,10 +173,24 @@ export async function analyzeErrorImage(uri: string): Promise<AnalyzeResponse> {
 }
 
 export async function lookupDiagnosticCode(code: string): Promise<AnalyzeResponse> {
-  const normalized = code.trim().toUpperCase();
-  const url = `${base.replace(/\/$/, '')}/lookup?q=${encodeURIComponent(normalized)}&make=Mercedes-Benz`;
-  const res = await fetch(url);
-  const text = await res.text();
+  const normalized = code.trim().toUpperCase().replace(/\u200B/g, '').replace(/\s+/g, '');
+  const root = base.replace(/\/$/, '');
+  const getUrl = `${root}/lookup?q=${encodeURIComponent(normalized)}`;
+
+  let res = await fetch(getUrl, { method: 'GET' });
+  const tryPostFallback = async () =>
+    fetch(`${root}/lookup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: normalized }),
+    });
+
+  /** Some setups only expose GET; others matched POST-first and hit 405 on older gateways. Prefer GET first. */
+  if (res.status === 405) {
+    res = await tryPostFallback();
+  }
+
+  let text = await res.text();
   let json: unknown = null;
   try {
     json = text ? JSON.parse(text) : null;
@@ -177,10 +213,26 @@ export async function lookupDiagnosticCode(code: string): Promise<AnalyzeRespons
           message = maybeMessage;
         }
       }
+    } else if (typeof text === 'string' && text.trim() && text.length < 300) {
+      try {
+        void JSON.parse(text);
+      } catch {
+        message = text.trim();
+      }
     }
     const err: Error & { status?: number; body?: unknown } = new Error(message);
     err.status = res.status;
     err.body = json ?? text;
+    if (
+      res.status === 422 &&
+      typeof message === 'string' &&
+      message.includes('5-character OBD code') &&
+      message.includes('full 17-character VIN') &&
+      !message.includes('BMW hex')
+    ) {
+      err.message =
+        `${message}\n\nYour API server is an older build (no BMW hex in /lookup). Restart the backend from the current project, then open /health and confirm "lookup_supports_bmw_hex": true.`;
+    }
     throw err;
   }
 
@@ -195,6 +247,7 @@ export type HealthResponse = {
   status: string;
   vision_configured?: boolean;
   llm_provider?: string;
+  lookup_supports_bmw_hex?: boolean;
   message?: string;
 };
 

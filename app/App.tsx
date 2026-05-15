@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+﻿import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -21,7 +21,9 @@ import {
   analyzeErrorImage,
   lookupDiagnosticCode,
   type AnalyzeResponse,
+  type CodeDependency,
   type DecodeSegment,
+  type DetectedCodeEntry,
 } from './lib/api';
 import { colors, font, radius, space } from './theme/tokens';
 
@@ -49,6 +51,32 @@ function difficultyTone(value: AnalyzeResponse['estimated_difficulty']) {
   if (value === 'Easy') return colors.teal;
   if (value === 'Medium') return colors.accent;
   return colors.danger;
+}
+
+/** Split probable_cause so the hero stays short; bullets omit dependency blurbs duplicated under Code dependencies. */
+function partitionDtcProbableCause(
+  probable: string,
+  dependencies: CodeDependency[] | undefined,
+): { summary: string; bulletLines: string[] } {
+  const lines = probable
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((line) => line.length > 0);
+  const marker = 'Additional codes on screen:';
+  const cutoff = lines.findIndex((l) => l.startsWith(marker));
+  const contentEnd = cutoff >= 0 ? cutoff : lines.length;
+  const depNeedles = (dependencies ?? [])
+    .map((d) => d.explanation.trim())
+    .filter((s) => s.length > 0);
+  const isDepLine = (line: string) =>
+    depNeedles.some((ex) => {
+      if (line === ex) return true;
+      const head = ex.slice(0, Math.min(52, ex.length));
+      return head.length >= 20 && line.includes(head);
+    });
+  const summary = lines.slice(0, Math.min(2, contentEnd)).join('\n');
+  const bulletLines = lines.slice(2, contentEnd).filter((line) => !isDepLine(line) && !line.startsWith(marker));
+  return { summary, bulletLines };
 }
 
 function ScanIcon({ size = 18, color }: { size?: number; color: string }) {
@@ -194,6 +222,59 @@ function DecodeBreakdown({
   );
 }
 
+const RELATION_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+  root_cause: { label: 'Root cause', color: '#FF5252', icon: '⚠' },
+  symptom: { label: 'Symptom', color: colors.accent, icon: '→' },
+  same_system: { label: 'Same system', color: colors.teal, icon: '◆' },
+  related: { label: 'Related', color: colors.blue, icon: '◇' },
+};
+
+function AdditionalCodeCard({ entry }: { entry: DetectedCodeEntry }) {
+  return (
+    <View style={styles.additionalCodeCard}>
+      <View style={styles.additionalCodeHeader}>
+        <Text style={styles.additionalCodeName}>{entry.code}</Text>
+        {entry.in_database ? (
+          <View style={[styles.dbBadge, { backgroundColor: `${colors.teal}22`, borderColor: `${colors.teal}55` }]}>
+            <Text style={[styles.dbBadgeText, { color: colors.teal }]}>In DB</Text>
+          </View>
+        ) : (
+          <View style={[styles.dbBadge, { backgroundColor: `${colors.textMuted}22`, borderColor: `${colors.textMuted}55` }]}>
+            <Text style={[styles.dbBadgeText, { color: colors.textMuted }]}>Unknown</Text>
+          </View>
+        )}
+        {entry.difficulty ? <DifficultyBadge value={entry.difficulty} /> : null}
+      </View>
+      {entry.title ? <Text style={styles.additionalCodeTitle}>{entry.title}</Text> : null}
+          {entry.probable_causes && entry.probable_causes.length > 0 ? (
+        <View style={styles.additionalCodeCauses}>
+          {entry.probable_causes.slice(0, 2).map((cause, idx) => (
+            <BulletItem key={`ac-${entry.code}-${idx}`} text={cause} tone={colors.textMuted} />
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function DependencyCard({ dep }: { dep: CodeDependency }) {
+  const meta = RELATION_LABELS[dep.relation] || RELATION_LABELS.related;
+  return (
+    <View style={styles.dependencyCard}>
+      <View style={styles.dependencyHeader}>
+        <Text style={[styles.dependencyIcon, { color: meta.color }]}>{meta.icon}</Text>
+        <Text style={styles.dependencyCodesText}>
+          {dep.from_code} → {dep.to_code}
+        </Text>
+        <View style={[styles.relationBadge, { backgroundColor: `${meta.color}1E`, borderColor: `${meta.color}55` }]}>
+          <Text style={[styles.relationBadgeText, { color: meta.color }]}>{meta.label}</Text>
+        </View>
+      </View>
+      <Text style={styles.dependencyExplanation}>{dep.explanation}</Text>
+    </View>
+  );
+}
+
 function UploadGlyph() {
   return (
     <View style={styles.uploadGlyph}>
@@ -212,7 +293,13 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lookupErrorMessage, setLookupErrorMessage] = useState<string | null>(null);
   const [codeInput, setCodeInput] = useState('');
+
+  const dtcProbableSplit = useMemo(() => {
+    if (!result || result.scan_type === 'vin') return null;
+    return partitionDtcProbableCause(result.probable_cause, result.dependencies);
+  }, [result]);
 
   const statusText = useMemo(() => {
     if (loading) return 'Scanning';
@@ -224,6 +311,7 @@ export default function App() {
   const pickImage = useCallback(async (mode: 'library' | 'camera') => {
     setResult(null);
     setErrorMessage(null);
+    setLookupErrorMessage(null);
 
     const permission =
       mode === 'camera'
@@ -252,6 +340,7 @@ export default function App() {
     setLoading(true);
     setResult(null);
     setErrorMessage(null);
+    setLookupErrorMessage(null);
     try {
       const data = await analyzeErrorImage(uri);
       setResult(data);
@@ -278,18 +367,19 @@ export default function App() {
   const lookupCode = useCallback(async () => {
     const code = codeInput.trim();
     if (!code) {
-      setErrorMessage('Enter an OBD code (e.g. P0420) or a 17-character VIN.');
+      setErrorMessage('Enter P0420, a BMW hex code (e.g. E12C11), or a 17-character VIN.');
       return;
     }
     setLookupLoading(true);
     setResult(null);
     setErrorMessage(null);
+    setLookupErrorMessage(null);
     try {
       const data = await lookupDiagnosticCode(code);
       setResult(data);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not look up the code.';
-      setErrorMessage(message);
+      setLookupErrorMessage(message);
       if (Platform.OS !== 'web') Alert.alert('Code lookup', message);
     } finally {
       setLookupLoading(false);
@@ -390,7 +480,7 @@ export default function App() {
                       onChangeText={setCodeInput}
                       autoCapitalize="characters"
                       autoCorrect={false}
-                      placeholder="P0420 or 17-char VIN"
+                      placeholder="P0420, E12C11, or 17-char VIN"
                       placeholderTextColor={colors.textFaint}
                       style={styles.codeInput}
                     />
@@ -440,7 +530,11 @@ export default function App() {
                         </Text>
                       ) : null}
                       {result.scan_type !== 'vin' ? (
-                        <Text style={styles.codeDescription}>{result.probable_cause}</Text>
+                        dtcProbableSplit?.summary ? (
+                          <Text style={styles.codeDescription}>{dtcProbableSplit.summary}</Text>
+                        ) : (
+                          <Text style={styles.codeDescription}>{result.probable_cause}</Text>
+                        )
                       ) : null}
                     </View>
 
@@ -452,20 +546,7 @@ export default function App() {
                       />
                     ) : null}
 
-                    {result.scan_type !== 'vin' ? (
-                      <View style={styles.section}>
-                        <CardEyebrow icon="◆" label="Probable cause" />
-                        <View style={styles.sectionContent}>
-                          {result.probable_cause
-                            .split(/\.\s+/)
-                            .filter((s) => s.trim().length > 4)
-                            .slice(0, 4)
-                            .map((sentence, idx) => (
-                              <BulletItem key={`cause-${idx}`} text={sentence.replace(/\.$/, '').trim()} />
-                            ))}
-                        </View>
-                      </View>
-                    ) : (
+                    {result.scan_type === 'vin' ? (
                       <View style={styles.section}>
                         <CardEyebrow icon="◆" label="Vehicle details" />
                         <View style={styles.sectionContent}>
@@ -477,7 +558,42 @@ export default function App() {
                             ))}
                         </View>
                       </View>
-                    )}
+                    ) : null}
+
+                    {result.scan_type !== 'vin' &&
+                    dtcProbableSplit &&
+                    dtcProbableSplit.bulletLines.length > 0 ? (
+                      <View style={styles.section}>
+                        <CardEyebrow icon="◆" label="Probable cause" />
+                        <View style={styles.sectionContent}>
+                          {dtcProbableSplit.bulletLines.map((line, idx) => (
+                            <BulletItem key={`cause-${idx}`} text={line.replace(/\.$/, '').trim()} />
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {result.dependencies && result.dependencies.length > 0 ? (
+                      <View style={styles.section}>
+                        <CardEyebrow icon="⚡" label="Code dependencies" />
+                        <View style={styles.sectionContent}>
+                          {result.dependencies.map((dep, idx) => (
+                            <DependencyCard key={`dep-${idx}`} dep={dep} />
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {result.additional_codes && result.additional_codes.length > 0 ? (
+                      <View style={styles.section}>
+                        <CardEyebrow icon="◈" label={`Additional codes (${result.additional_codes.length})`} />
+                        <View style={styles.sectionContent}>
+                          {result.additional_codes.map((entry) => (
+                            <AdditionalCodeCard key={`add-${entry.code}`} entry={entry} />
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
 
                     <View style={styles.section}>
                       <CardEyebrow icon="⚙" label={result.scan_type === 'vin' ? 'Next steps' : 'Recommended workflow'} />
@@ -513,10 +629,12 @@ export default function App() {
                   </View>
                 )}
 
-                {errorMessage ? (
+                {(errorMessage || lookupErrorMessage) ? (
                   <View style={styles.errorCard}>
-                    <Text style={styles.errorTitle}>Could not complete scan</Text>
-                    <Text style={styles.errorText}>{errorMessage}</Text>
+                    <Text style={styles.errorTitle}>
+                      {lookupErrorMessage ? 'Could not complete lookup' : 'Could not complete scan'}
+                    </Text>
+                    <Text style={styles.errorText}>{lookupErrorMessage ?? errorMessage}</Text>
                   </View>
                 ) : null}
               </View>
@@ -1028,6 +1146,87 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+  },
+  additionalCodeCard: {
+    backgroundColor: colors.surfaceInset,
+    borderRadius: radius.md,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    padding: space.md,
+    gap: 6,
+  },
+  additionalCodeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  additionalCodeName: {
+    color: colors.accent,
+    fontSize: font.body,
+    fontFamily: monoFont,
+    fontWeight: '600',
+  },
+  additionalCodeTitle: {
+    color: colors.textSecondary,
+    fontSize: font.caption,
+    lineHeight: 18,
+  },
+  additionalCodeCauses: {
+    gap: 4,
+    paddingTop: 2,
+  },
+  dbBadge: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  dbBadgeText: {
+    fontSize: font.nano,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dependencyCard: {
+    backgroundColor: colors.surfaceInset,
+    borderRadius: radius.md,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    padding: space.md,
+    gap: 6,
+  },
+  dependencyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  dependencyIcon: {
+    fontSize: font.body,
+    fontWeight: '700',
+  },
+  dependencyCodesText: {
+    color: colors.textPrimary,
+    fontFamily: monoFont,
+    fontSize: font.caption,
+    fontWeight: '600',
+    flex: 1,
+  },
+  relationBadge: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  relationBadgeText: {
+    fontSize: font.nano,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dependencyExplanation: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
   },
   warningCard: {
     padding: space.lg,
