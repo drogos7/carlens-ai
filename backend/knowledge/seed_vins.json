@@ -1,0 +1,98 @@
+{
+  "vehicles": [
+    {
+      "vin": "WDDGF8AB5CA123456",
+      "make": "Mercedes-Benz",
+      "model": "C-Class",
+      "engine": "OM651",
+      "year": 2012,
+      "body_style": "Sedan",
+      "trim": "C 220 CDI",
+      "notes": "W204 generation, 2.1L diesel OM651. Common issues: EGR, DPF, swirl flaps."
+    },
+    {
+      "vin": "WDD2040071A123456",
+      "make": "Mercedes-Benz",
+      "model": "C-Class",
+      "engine": "OM651",
+      "year": 2011,
+      "body_style": "Sedan",
+      "trim": "C 220 CDI BlueEFFICIENCY",
+      "notes": "OM651 2.1L diesel. Check EGR differential pressure and DPF soot load."
+    },
+    {
+      "vin": "WDB9066331A123456",
+      "make": "Mercedes-Benz",
+      "model": "Sprinter",
+      "engine": "OM651",
+      "year": 2013,
+      "body_style": "Van",
+      "trim": "316 CDI",
+      "notes": "NCV3 Sprinter with OM651. Fleet vehicle — verify service history for DPF regens."
+    },
+    {
+      "vin": "WDD1760421A123456",
+      "make": "Mercedes-Benz",
+      "model": "A-Class",
+      "engine": "OM607",
+      "year": 2014,
+      "body_style": "Hatchback",
+      "trim": "A 180 CDI",
+      "notes": "W176 compact. OM607 1.5L diesel (related family to OM651 diagnostics)."
+    },
+    {
+      "vin": "WDDNG9FB3AA304827",
+      "make": "Mercedes-Benz",
+      "model": "S-Class",
+      "engine": "M276 Hybrid",
+      "year": 2013,
+      "body_style": "Sedan",
+      "trim": "S 400 HYBRID (221.195)",
+      "notes": "W221 S400 Hybrid. Quick scan often shows BMS, DC/DC converter, and door module faults — drill into each module for DTC codes."
+    }
+  ],
+  "wmi_prefixes": [
+    {
+      "wmi": "WDD",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Daimler AG / Mercedes-Benz Cars",
+      "notes": "Passenger cars built in Germany."
+    },
+    {
+      "wmi": "WDB",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Daimler AG",
+      "notes": "Often commercial vans (Sprinter) and legacy passenger models."
+    },
+    {
+      "wmi": "WDC",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Mercedes-Benz SUVs / G-Class",
+      "notes": "SUV and off-road models."
+    },
+    {
+      "wmi": "WDF",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Mercedes-Benz Vans",
+      "notes": "Vito / V-Class and commercial variants."
+    },
+    {
+      "wmi": "W1K",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Mercedes-Benz (new WMI scheme)",
+      "notes": "Newer passenger car WMI codes."
+    },
+    {
+      "wmi": "W1N",
+      "make": "Mercedes-Benz",
+      "country": "Germany",
+      "manufacturer": "Mercedes-Benz SUVs",
+      "notes": "Newer SUV / crossover WMI codes."
+    }
+  ]
+}

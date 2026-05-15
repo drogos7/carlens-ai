@@ -4,7 +4,13 @@ import { Platform } from 'react-native';
 const base = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000';
 
 export type AnalyzeResponse = {
+  scan_type?: 'dtc' | 'vin';
   detected_code: string;
+  detected_vin?: string | null;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_engine?: string | null;
+  vehicle_year?: number | null;
   probable_cause: string;
   step_by_step_fix: string[];
   estimated_difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -57,13 +63,28 @@ async function buildFormData(uri: string): Promise<FormData> {
   return formData;
 }
 
+const SCAN_TIMEOUT_MS = 90_000;
+
 export async function analyzeErrorImage(uri: string): Promise<AnalyzeResponse> {
   const formData = await buildFormData(uri);
   const url = `${base.replace(/\/$/, '')}/scan-error-local`;
-  const res = await fetch(url, {
-    method: 'POST',
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Scan timed out. Try a closer crop of the code or VIN line, then scan again.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const text = await res.text();
   let json: unknown = null;

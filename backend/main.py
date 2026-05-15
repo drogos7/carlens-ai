@@ -29,6 +29,9 @@ KNOWLEDGE_DIR = BASE_DIR / "knowledge"
 KNOWLEDGE_DB_PATH = KNOWLEDGE_DIR / "diagnostics.db"
 SEED_CODES_PATH = KNOWLEDGE_DIR / "seed_codes.json"
 SEED_CODES_GLOB = "seed_*.json"
+SEED_VINS_PATH = KNOWLEDGE_DIR / "seed_vins.json"
+VIN_LENGTH = 17
+VIN_CHARS = re.compile(r"^[A-HJ-NPR-Z0-9]{17}$")
 
 
 class LLMProvider(str, Enum):
@@ -60,6 +63,8 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+_rapid_ocr_engine: Any = None
+
 
 def _parse_cors_origins(raw: str) -> list[str]:
     return [o.strip() for o in raw.split(",") if o.strip()]
@@ -74,7 +79,13 @@ class Difficulty(str, Enum):
 class AnalyzeErrorResponse(BaseModel):
     """Structured response returned to API clients."""
 
-    detected_code: str = Field(description="Primary OBD-II code, normalized (e.g. P0401).")
+    scan_type: Literal["dtc", "vin"] = Field(default="dtc", description="Whether the scan matched a DTC or a VIN.")
+    detected_code: str = Field(description="OBD-II code (dtc) or VIN string (vin).")
+    detected_vin: str | None = Field(default=None, description="17-character VIN when scan_type is vin.")
+    vehicle_make: str | None = None
+    vehicle_model: str | None = None
+    vehicle_engine: str | None = None
+    vehicle_year: int | None = None
     probable_cause: str
     step_by_step_fix: list[str] = Field(default_factory=list)
     estimated_difficulty: Literal["Easy", "Medium", "Hard"]
@@ -95,6 +106,26 @@ class AnalyzeErrorResponse(BaseModel):
 class LocalScanDebugResponse(BaseModel):
     text: str
     detected_candidates: list[str]
+    detected_vins: list[str] = Field(default_factory=list)
+
+
+class VinVehicleResponse(BaseModel):
+    vin: str
+    make: str
+    model: str
+    engine: str
+    year: int | None = None
+    body_style: str = ""
+    trim: str = ""
+    notes: str = ""
+
+
+class WmiPrefixResponse(BaseModel):
+    wmi: str
+    make: str
+    country: str = ""
+    manufacturer: str = ""
+    notes: str = ""
 
 
 class DiagnosticCodeResponse(BaseModel):
@@ -171,11 +202,88 @@ def _row_to_diagnostic_code(row: sqlite3.Row) -> DiagnosticCodeResponse:
 
 def _diagnostic_to_analyze_response(item: DiagnosticCodeResponse) -> AnalyzeErrorResponse:
     return AnalyzeErrorResponse(
+        scan_type="dtc",
         detected_code=item.code,
         probable_cause="\n".join([item.title, item.description, *item.probable_causes]),
         step_by_step_fix=item.step_by_step_fix,
         estimated_difficulty=item.difficulty,
         safety_warning=item.safety_warning,
+    )
+
+
+def _row_to_vin_vehicle(row: sqlite3.Row) -> VinVehicleResponse:
+    year = row["year"]
+    return VinVehicleResponse(
+        vin=row["vin"],
+        make=row["make"],
+        model=row["model"],
+        engine=row["engine"],
+        year=int(year) if year is not None else None,
+        body_style=row["body_style"] or "",
+        trim=row["trim"] or "",
+        notes=row["notes"] or "",
+    )
+
+
+def _vin_to_analyze_response(vehicle: VinVehicleResponse) -> AnalyzeErrorResponse:
+    year_part = str(vehicle.year) if vehicle.year else "Unknown year"
+    summary = f"{year_part} {vehicle.make} {vehicle.model}".strip()
+    if vehicle.trim:
+        summary += f" ({vehicle.trim})"
+    details = [summary, f"Engine: {vehicle.engine}"]
+    if vehicle.body_style:
+        details.append(f"Body style: {vehicle.body_style}")
+    if vehicle.notes:
+        details.append(vehicle.notes)
+    steps = [
+        "Confirm this VIN on the vehicle data plate (door jamb or windshield base).",
+        "Use the VIN for parts lookup, service history, and manufacturer TSB searches.",
+        "Scan or enter an OBD-II fault code for this vehicle to get a step-by-step repair guide.",
+    ]
+    return AnalyzeErrorResponse(
+        scan_type="vin",
+        detected_code=vehicle.vin,
+        detected_vin=vehicle.vin,
+        vehicle_make=vehicle.make,
+        vehicle_model=vehicle.model,
+        vehicle_engine=vehicle.engine,
+        vehicle_year=vehicle.year,
+        probable_cause="\n".join(details),
+        step_by_step_fix=steps,
+        estimated_difficulty="Easy",
+        safety_warning=(
+            "VIN identifies the vehicle configuration only. Verify the plate VIN matches before ordering "
+            "parts or performing safety-related work."
+        ),
+    )
+
+
+def _wmi_to_analyze_response(wmi: WmiPrefixResponse, vin: str) -> AnalyzeErrorResponse:
+    details = [
+        f"Partial VIN decode for {vin}",
+        f"Manufacturer: {wmi.make}",
+        f"WMI prefix {wmi.wmi} — {wmi.manufacturer or wmi.make}",
+    ]
+    if wmi.country:
+        details.append(f"Country of origin: {wmi.country}")
+    if wmi.notes:
+        details.append(wmi.notes)
+    details.append(
+        "Full vehicle details (model, engine, year) are not in the local database yet for this exact VIN."
+    )
+    return AnalyzeErrorResponse(
+        scan_type="vin",
+        detected_code=vin,
+        detected_vin=vin,
+        vehicle_make=wmi.make,
+        probable_cause="\n".join(details),
+        step_by_step_fix=[
+            "Photograph the full 17-character VIN clearly if any characters were misread.",
+            "Add this VIN to the local database to unlock model, engine, and year.",
+            "Scan an OBD-II fault code screen for repair steps.",
+        ],
+        estimated_difficulty="Easy",
+        safety_warning="WMI decode is approximate. Confirm the full VIN on the vehicle before relying on it for parts.",
     )
 
 
@@ -186,7 +294,220 @@ def _normalize_code(code: str) -> str:
     return cleaned
 
 
-def _candidate_codes_from_text(text: str) -> list[str]:
+def _normalize_vin_chars(value: str) -> str:
+    """Normalize OCR text toward valid VIN alphabet (no I, O, Q)."""
+    cleaned = re.sub(r"[^A-Za-z0-9]", "", value).upper()
+    return cleaned.replace("O", "0").replace("I", "1").replace("Q", "0")
+
+
+VIN_BLACKLIST_FRAGMENTS = (
+    "CHECK",
+    "ENGINE",
+    "MEMOSC",
+    "CANOBD",
+    "ERROR",
+    "DISPLAY",
+    "SCAN",
+    "BOSS",
+)
+
+
+def _is_valid_vin(vin: str) -> bool:
+    return len(vin) == VIN_LENGTH and bool(VIN_CHARS.fullmatch(vin))
+
+
+def _is_plausible_vin(vin: str) -> bool:
+    if not _is_valid_vin(vin):
+        return False
+    if any(fragment in vin for fragment in VIN_BLACKLIST_FRAGMENTS):
+        return False
+    if vin[8] not in "0123456789X":
+        return False
+    if not re.match(r"^[A-HJ-NPR-Z0-9]{3}", vin[:3]):
+        return False
+    return True
+
+
+def _compact_alnum(text: str) -> str:
+    return _normalize_vin_chars(text)
+
+
+def _vin_windows_from_compact(compact: str) -> list[str]:
+    windows: list[str] = []
+    if len(compact) < VIN_LENGTH:
+        return windows
+    for index in range(len(compact) - VIN_LENGTH + 1):
+        window = compact[index : index + VIN_LENGTH]
+        if _is_plausible_vin(window) and window not in windows:
+            windows.append(window)
+    return windows
+
+
+def _text_has_vin_label(text: str) -> bool:
+    return bool(re.search(r"\bVIN\b", text, re.IGNORECASE))
+
+
+def _vin_from_labeled_text(text: str) -> str | None:
+    for match in re.finditer(r"VIN\s*[:#-]?\s*([A-Za-z0-9\s-]{15,24})", text, re.IGNORECASE):
+        candidate = _normalize_vin_chars(match.group(1))[:VIN_LENGTH]
+        if _is_plausible_vin(candidate):
+            return candidate
+    return None
+
+
+def _candidate_vins_from_text(text: str) -> list[str]:
+    vins: list[str] = []
+
+    labeled = _vin_from_labeled_text(text)
+    if labeled:
+        vins.append(labeled)
+        return _rank_vin_candidates(vins)
+
+    compact = _compact_alnum(text)
+    mercedes_prefixes = ("WDD", "WDB", "WDC", "WDF", "W1K", "W1N")
+
+    if _text_has_vin_label(text):
+        for match in re.finditer(r"VIN", text, re.IGNORECASE):
+            tail = text[match.end() : match.end() + 28]
+            fragment = _normalize_vin_chars(tail)
+            if len(fragment) >= VIN_LENGTH:
+                candidate = fragment[:VIN_LENGTH]
+                if _is_plausible_vin(candidate) and candidate not in vins:
+                    vins.append(candidate)
+            slice_compact = _compact_alnum(tail)[:24]
+            for window in _vin_windows_from_compact(slice_compact):
+                if window not in vins:
+                    vins.append(window)
+    elif len(compact) <= 400:
+        for window in _vin_windows_from_compact(compact):
+            if window not in vins:
+                vins.append(window)
+    else:
+        for prefix in mercedes_prefixes:
+            index = compact.find(prefix)
+            if index < 0:
+                continue
+            slice_compact = compact[max(0, index) : index + VIN_LENGTH + 8]
+            for window in _vin_windows_from_compact(slice_compact):
+                if window not in vins:
+                    vins.append(window)
+            if vins:
+                break
+
+    return _rank_vin_candidates(vins[:24])
+
+
+def _rank_vin_candidates(candidates: list[str]) -> list[str]:
+    unique = list(dict.fromkeys(candidates))[:24]
+    if not unique:
+        return []
+
+    scored: list[tuple[int, str]] = []
+    for vin in unique:
+        points = 0
+        if _lookup_vin(vin):
+            points += 100
+        elif _lookup_wmi(vin[:3]):
+            points += 40
+        if re.match(r"^W[DBDCFKN1]", vin):
+            points += 15
+        if any(fragment in vin for fragment in VIN_BLACKLIST_FRAGMENTS):
+            points -= 80
+        if points > 0 or _is_plausible_vin(vin):
+            scored.append((points, vin))
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    return [vin for _, vin in scored]
+
+
+def _candidate_is_inside_vin(candidate: str, text: str, vin_windows: list[str] | None = None) -> bool:
+    normalized = _normalize_code(candidate)
+    if len(normalized) != 5:
+        return False
+    windows = vin_windows if vin_windows is not None else _candidate_vins_from_text(text)
+    for vin in windows:
+        if normalized in vin:
+            return True
+    compact = _compact_alnum(text)
+    for index in range(max(0, len(compact) - VIN_LENGTH + 1)):
+        window = compact[index : index + VIN_LENGTH]
+        if normalized in window and len(window) >= VIN_LENGTH:
+            return True
+    return False
+
+
+def _lookup_vin(vin: str) -> VinVehicleResponse | None:
+    normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
+    if not _is_plausible_vin(normalized):
+        return None
+    with _db_connection() as conn:
+        row = conn.execute("SELECT * FROM vin_vehicles WHERE vin = ?", (normalized,)).fetchone()
+    return _row_to_vin_vehicle(row) if row else None
+
+
+def _lookup_wmi(wmi: str) -> WmiPrefixResponse | None:
+    prefix = _normalize_vin_chars(wmi)[:3]
+    if len(prefix) != 3:
+        return None
+    with _db_connection() as conn:
+        row = conn.execute("SELECT * FROM vin_wmi WHERE wmi = ?", (prefix,)).fetchone()
+    if not row:
+        return None
+    return WmiPrefixResponse(
+        wmi=row["wmi"],
+        make=row["make"],
+        country=row["country"] or "",
+        manufacturer=row["manufacturer"] or "",
+        notes=row["notes"] or "",
+    )
+
+
+def _detect_vin_from_text(text: str) -> tuple[str | None, list[str]]:
+    candidates = _candidate_vins_from_text(text)
+    for vin in candidates:
+        if _lookup_vin(vin):
+            return vin, candidates
+    return (candidates[0], candidates) if candidates else (None, candidates)
+
+
+def _resolve_vin_scan(text: str) -> AnalyzeErrorResponse | None:
+    vin, candidates = _detect_vin_from_text(text)
+    has_vin_label = _text_has_vin_label(text)
+    if not vin and not candidates and not has_vin_label:
+        return None
+
+    primary = vin or (candidates[0] if candidates else None)
+    if primary:
+        vehicle = _lookup_vin(primary)
+        if vehicle:
+            return _vin_to_analyze_response(vehicle)
+
+        if _is_plausible_vin(primary[:VIN_LENGTH]) or len(primary) >= VIN_LENGTH:
+            wmi = _lookup_wmi(primary[:3])
+            if wmi:
+                return _wmi_to_analyze_response(wmi, primary[:VIN_LENGTH] if len(primary) >= VIN_LENGTH else primary)
+
+    if has_vin_label or candidates:
+        partial = primary or "unknown"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": (
+                    f"Detected VIN context ({partial}), but this VIN is not in the local vehicle database yet."
+                ),
+                "detected_vins": candidates,
+                "ocr_text": text,
+                "hints": [
+                    "Ensure all 17 VIN characters are visible and in focus.",
+                    "VIN is usually on the door jamb sticker or bottom of the windshield.",
+                    "Fragments like letters inside a VIN are not OBD fault codes.",
+                ],
+            },
+        )
+    return None
+
+
+def _candidate_codes_from_text(text: str, *, vin_windows: list[str] | None = None) -> list[str]:
     compact = re.sub(r"[^A-Za-z0-9]", "", text).upper()
     candidates: list[str] = []
     # DTCs are P/C/B/U + digit 0-3 + 3 hex-like chars. This rejects UI text like "B0SSC".
@@ -194,12 +515,12 @@ def _candidate_codes_from_text(text: str) -> list[str]:
     for source in (text.upper(), compact):
         for match in pattern.findall(source):
             code = _normalize_code(match)
-            if len(code) == 5 and code not in candidates:
+            if len(code) == 5 and code not in candidates and not _candidate_is_inside_vin(code, text, vin_windows):
                 candidates.append(code)
     return candidates
 
 
-def _fuzzy_candidate_codes_from_text(text: str) -> list[str]:
+def _fuzzy_candidate_codes_from_text(text: str, *, vin_windows: list[str] | None = None) -> list[str]:
     compact = re.sub(r"[^A-Za-z0-9]", "", text).upper()
     candidates: list[str] = []
     # Invalid-looking P/C/B/U words are used only to correct to known DB codes.
@@ -207,7 +528,7 @@ def _fuzzy_candidate_codes_from_text(text: str) -> list[str]:
     for source in (text.upper(), compact):
         for match in fuzzy_pattern.findall(source):
             code = _normalize_code(match)
-            if len(code) == 5 and code not in candidates:
+            if len(code) == 5 and code not in candidates and not _candidate_is_inside_vin(code, text, vin_windows):
                 candidates.append(code)
     return candidates
 
@@ -281,32 +602,42 @@ def _image_variants(image_bytes: bytes, suffix: str) -> list[tuple[str, bytes]]:
     if img is None:
         return [("original", image_bytes)]
 
+    max_side = max(img.shape[:2])
     variants: list[tuple[str, bytes]] = [("original", image_bytes)]
-    scale = 3 if max(img.shape[:2]) < 1200 else 2
-    enlarged = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-    gray = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
-    _, binary = cv2.threshold(clahe, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    inverted = cv2.bitwise_not(binary)
-
     encode_ext = ".png" if suffix.lower() == ".png" else ".jpg"
-    for name, image in [("enlarged", enlarged), ("gray-contrast", clahe), ("binary", binary), ("inverted", inverted)]:
-        ok, encoded = cv2.imencode(encode_ext, image)
+
+    if max_side > 1600:
+        scale = 1600 / max_side
+        resized = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        ok, encoded = cv2.imencode(encode_ext, resized)
         if ok:
-            variants.append((name, encoded.tobytes()))
+            variants[0] = ("original", encoded.tobytes())
+        return variants
+
+    scale = 2 if max_side < 1200 else 1.5
+    enlarged = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    ok, encoded = cv2.imencode(encode_ext, enlarged)
+    if ok:
+        variants.append(("enlarged", encoded.tobytes()))
     return variants
 
 
-def _run_rapidocr(image_bytes: bytes, suffix: str) -> str:
-    try:
-        from rapidocr_onnxruntime import RapidOCR
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Local OCR is not installed. Run: pip install -r requirements.txt in backend.",
-        ) from exc
+def _get_rapid_ocr_engine() -> Any:
+    global _rapid_ocr_engine
+    if _rapid_ocr_engine is None:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+        except ImportError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Local OCR is not installed. Run: pip install -r requirements.txt in backend.",
+            ) from exc
+        _rapid_ocr_engine = RapidOCR()
+    return _rapid_ocr_engine
 
-    engine = RapidOCR()
+
+def _run_rapidocr(image_bytes: bytes, suffix: str) -> str:
+    engine = _get_rapid_ocr_engine()
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         tmp.write(image_bytes)
         tmp_path = Path(tmp.name)
@@ -332,25 +663,37 @@ def _run_rapidocr(image_bytes: bytes, suffix: str) -> str:
     return "\n".join(parts)
 
 
+def _ocr_has_usable_signal(text: str) -> bool:
+    if _vin_from_labeled_text(text):
+        return True
+    if _text_has_vin_label(text):
+        return True
+    if _known_code_matches_from_text(text):
+        return True
+    if _candidate_codes_from_text(text):
+        return True
+    return False
+
+
 def _extract_text_with_local_ocr(image_bytes: bytes, suffix: str = ".jpg") -> str:
     texts: list[str] = []
     for name, variant_bytes in _image_variants(image_bytes, suffix):
         variant_text = _run_rapidocr(variant_bytes, suffix)
         if variant_text.strip():
             texts.append(f"[{name}]\n{variant_text}")
-        if (
-            _known_code_matches_from_text(variant_text)
-            or _candidate_codes_from_text(variant_text)
-            or _fuzzy_known_code_matches(_fuzzy_candidate_codes_from_text(variant_text))
-        ):
+        if _ocr_has_usable_signal(variant_text):
             break
     return "\n\n".join(texts)
 
 
 def _detect_known_code_from_text(text: str) -> tuple[str | None, list[str]]:
+    if _text_has_vin_label(text):
+        return None, []
+
+    vin_windows = _candidate_vins_from_text(text)
     known_matches = _known_code_matches_from_text(text)
-    strict_candidates = _candidate_codes_from_text(text)
-    fuzzy_candidates = _fuzzy_candidate_codes_from_text(text)
+    strict_candidates = _candidate_codes_from_text(text, vin_windows=vin_windows)
+    fuzzy_candidates = _fuzzy_candidate_codes_from_text(text, vin_windows=vin_windows)
     candidates = [*known_matches]
     for candidate in strict_candidates:
         if candidate not in candidates:
@@ -413,6 +756,8 @@ def _init_knowledge_db() -> None:
             logger.warning("Knowledge seed files missing: %s", KNOWLEDGE_DIR / SEED_CODES_GLOB)
             return
         for seed_path in seed_paths:
+            if seed_path.name == SEED_VINS_PATH.name:
+                continue
             seed_items = json.loads(seed_path.read_text(encoding="utf-8"))
             for item in seed_items:
                 conn.execute(
@@ -435,6 +780,72 @@ def _init_knowledge_db() -> None:
                         item["difficulty"],
                         item["safety_warning"],
                         _encode_json(item["sources"]),
+                    ),
+                )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS vin_vehicles (
+                vin TEXT PRIMARY KEY,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                engine TEXT NOT NULL,
+                year INTEGER,
+                body_style TEXT NOT NULL DEFAULT '',
+                trim TEXT NOT NULL DEFAULT '',
+                notes TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS vin_wmi (
+                wmi TEXT PRIMARY KEY,
+                make TEXT NOT NULL,
+                country TEXT NOT NULL DEFAULT '',
+                manufacturer TEXT NOT NULL DEFAULT '',
+                notes TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        if SEED_VINS_PATH.exists():
+            seed_vins = json.loads(SEED_VINS_PATH.read_text(encoding="utf-8"))
+            for item in seed_vins.get("vehicles", []):
+                vin = _normalize_vin_chars(item["vin"])[:VIN_LENGTH]
+                if not _is_valid_vin(vin):
+                    continue
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO vin_vehicles (
+                        vin, make, model, engine, year, body_style, trim, notes, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    """,
+                    (
+                        vin,
+                        item["make"],
+                        item["model"],
+                        item["engine"],
+                        item.get("year"),
+                        item.get("body_style", ""),
+                        item.get("trim", ""),
+                        item.get("notes", ""),
+                    ),
+                )
+            for item in seed_vins.get("wmi_prefixes", []):
+                wmi = _normalize_vin_chars(item["wmi"])[:3]
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO vin_wmi (wmi, make, country, manufacturer, notes, updated_at)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    """,
+                    (
+                        wmi,
+                        item["make"],
+                        item.get("country", ""),
+                        item.get("manufacturer", ""),
+                        item.get("notes", ""),
                     ),
                 )
         conn.commit()
@@ -766,6 +1177,26 @@ async def get_code_sources(code: str) -> list[SourceMentionResponse]:
     return _source_mentions_for_code(code)
 
 
+@app.get("/vins/{vin}", response_model=VinVehicleResponse)
+async def get_vin(vin: str) -> VinVehicleResponse:
+    item = _lookup_vin(vin)
+    if not item:
+        wmi = _lookup_wmi(vin)
+        if wmi and _is_valid_vin(_normalize_vin_chars(vin)[:VIN_LENGTH]):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "message": f"VIN {_normalize_vin_chars(vin)[:VIN_LENGTH]} is not in the database, but WMI {wmi.wmi} maps to {wmi.make}.",
+                    "wmi": wmi.model_dump(),
+                },
+            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No vehicle record found for VIN {_normalize_vin_chars(vin)[:VIN_LENGTH]}.",
+        )
+    return item
+
+
 @app.post("/scan-error-local", response_model=AnalyzeErrorResponse)
 async def scan_error_local(image: UploadFile = File(..., description="Diagnostic screen photo")) -> AnalyzeErrorResponse:
     """
@@ -777,6 +1208,11 @@ async def scan_error_local(image: UploadFile = File(..., description="Diagnostic
     mime = _normalize_media_type(image.content_type)
     suffix = ".png" if mime == "image/png" else ".webp" if mime == "image/webp" else ".jpg"
     text = _extract_text_with_local_ocr(content, suffix=suffix)
+
+    vin_result = _resolve_vin_scan(text)
+    if vin_result is not None:
+        return vin_result
+
     code, candidates = _detect_known_code_from_text(text)
 
     if not code:
@@ -813,7 +1249,12 @@ async def scan_error_local_debug(image: UploadFile = File(...)) -> LocalScanDebu
     mime = _normalize_media_type(image.content_type)
     suffix = ".png" if mime == "image/png" else ".webp" if mime == "image/webp" else ".jpg"
     text = _extract_text_with_local_ocr(content, suffix=suffix)
-    return LocalScanDebugResponse(text=text, detected_candidates=_candidate_codes_from_text(text))
+    vin_windows = _candidate_vins_from_text(text)
+    return LocalScanDebugResponse(
+        text=text,
+        detected_candidates=_candidate_codes_from_text(text, vin_windows=vin_windows),
+        detected_vins=vin_windows,
+    )
 
 
 @app.post("/analyze-error", response_model=AnalyzeErrorResponse)
