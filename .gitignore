@@ -12,9 +12,8 @@ app/dist/
 app/web-build/
 app/.env
 
-# Portable Node.js (see scripts/setup.ps1)
-tools/node/
-tools/*.zip
+# Local tool downloads (see scripts/setup.ps1)
+tools/
 
 # OS
 .DS_Store
