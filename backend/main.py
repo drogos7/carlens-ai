@@ -191,8 +191,14 @@ def _candidate_codes_from_text(text: str) -> list[str]:
     candidates: list[str] = []
     # DTCs are P/C/B/U + digit 0-3 + 3 hex-like chars. This rejects UI text like "B0SSC".
     pattern = re.compile(r"[PCBU][0-3OIL][0-9A-FIO]{3}")
+    # Also collect invalid-looking P/C/B/U words for fuzzy correction, e.g. OCR P8428 -> P0420.
+    fuzzy_pattern = re.compile(r"[PCBU][0-9A-Z]{4}")
     for source in (text.upper(), compact):
         for match in pattern.findall(source):
+            code = _normalize_code(match)
+            if len(code) == 5 and code not in candidates:
+                candidates.append(code)
+        for match in fuzzy_pattern.findall(source):
             code = _normalize_code(match)
             if len(code) == 5 and code not in candidates:
                 candidates.append(code)
@@ -217,6 +223,42 @@ def _known_code_matches_from_text(text: str) -> list[str]:
         }
         if any(variant in normalized_text for variant in variants) and code not in matches:
             matches.append(code)
+    return matches
+
+
+def _code_distance(a: str, b: str) -> int:
+    if len(a) != len(b):
+        return max(len(a), len(b))
+    similar_pairs = {
+        frozenset(("0", "8")),
+        frozenset(("0", "6")),
+        frozenset(("2", "8")),
+        frozenset(("2", "Z")),
+        frozenset(("0", "D")),
+        frozenset(("1", "I")),
+        frozenset(("1", "L")),
+        frozenset(("5", "S")),
+        frozenset(("4", "A")),
+    }
+    distance = 0
+    for left, right in zip(a, b):
+        if left == right:
+            continue
+        distance += 1 if frozenset((left, right)) in similar_pairs else 2
+    return distance
+
+
+def _fuzzy_known_code_matches(candidates: list[str]) -> list[str]:
+    known = _known_codes()
+    matches: list[str] = []
+    for candidate in candidates:
+        if candidate in known:
+            matches.append(candidate)
+            continue
+        same_family = [code for code in known if code[0] == candidate[0]]
+        ranked = sorted((_code_distance(candidate, code), code) for code in same_family)
+        if ranked and ranked[0][0] <= 3 and ranked[0][1] not in matches:
+            matches.append(ranked[0][1])
     return matches
 
 
@@ -300,6 +342,9 @@ def _detect_known_code_from_text(text: str) -> tuple[str | None, list[str]]:
     for candidate in _candidate_codes_from_text(text):
         if candidate not in candidates:
             candidates.append(candidate)
+    for match in _fuzzy_known_code_matches(candidates):
+        if match not in candidates:
+            candidates.insert(0, match)
     for candidate in candidates:
         if _lookup_code(candidate, make="Mercedes-Benz"):
             return candidate, candidates
