@@ -11,7 +11,6 @@ AI-powered car diagnostic assistant: scan OBD scanner screens or enter fault cod
 - **VIN decode** — vehicle lookup via local DB + NHTSA vPIC API
 - **Brand libraries** — knowledge organized per manufacturer (`mercedes-benz`, `bmw`, …)
 - **BMW hex codes** — manufacturer-specific `E` codes (e.g. iDrive fault lists)
-- **Premium web UI** — Expo / React Native desktop workspace
 
 ## Project structure
 
