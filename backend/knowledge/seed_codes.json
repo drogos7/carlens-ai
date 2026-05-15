@@ -1,0 +1,265 @@
+[
+  {
+    "code": "P0401",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "EGR flow insufficient detected",
+    "description": "The ECU detected less exhaust gas recirculation flow than expected.",
+    "probable_causes": [
+      "Carbon buildup in the EGR valve or EGR cooler passages",
+      "Faulty EGR valve position feedback",
+      "Blocked intake/EGR path on high-mileage OM651 engines",
+      "Vacuum or actuator control issue, depending on variant"
+    ],
+    "symptoms": [
+      "Check engine light",
+      "Reduced power or limp mode",
+      "Rough running at low RPM",
+      "Higher NOx emissions"
+    ],
+    "step_by_step_fix": [
+      "Confirm the code with a diagnostic scanner and record freeze-frame data.",
+      "Inspect EGR wiring, connector pins, and vacuum/control lines where fitted.",
+      "Check live data for commanded versus actual EGR position and air mass deviation.",
+      "Remove and inspect the EGR valve and accessible EGR passages for carbon restriction.",
+      "Clean or replace the EGR valve/cooler components if movement or flow is restricted.",
+      "Clear codes and road-test while monitoring EGR and MAF live data."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Work only on a cool engine and avoid inhaling soot deposits. Disconnect the battery if removing electrical actuators.",
+    "sources": [
+      "Internal seed knowledge based on common OM651 diagnostic patterns"
+    ]
+  },
+  {
+    "code": "P0420",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Catalyst system efficiency below threshold",
+    "description": "The ECU determined that catalyst efficiency is lower than expected on bank 1.",
+    "probable_causes": [
+      "Aging or damaged catalytic converter",
+      "Exhaust leak before or near the oxygen sensors",
+      "Faulty downstream oxygen sensor",
+      "Misfires or rich running that damaged the catalyst",
+      "Aftermarket catalyst with low efficiency"
+    ],
+    "symptoms": [
+      "Check engine light",
+      "Often no drivability symptoms",
+      "Possible fuel smell or poor fuel economy",
+      "Failed emissions test"
+    ],
+    "step_by_step_fix": [
+      "Check for other codes first, especially misfire, fuel trim, or oxygen sensor codes.",
+      "Inspect the exhaust for leaks before the catalyst and around sensor bungs.",
+      "Review upstream and downstream oxygen sensor waveforms; downstream should be steadier than upstream.",
+      "Verify fuel trims and fix rich/lean or misfire issues before replacing the catalyst.",
+      "If sensor data and exhaust integrity confirm low efficiency, replace the catalyst with an OE-quality part.",
+      "Clear the code and complete the catalyst monitor drive cycle."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Exhaust components get extremely hot. Let the vehicle cool fully and support it securely before inspection.",
+    "sources": [
+      "Internal seed knowledge based on generic OBD-II catalyst diagnostics"
+    ]
+  },
+  {
+    "code": "P0101",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "Mass air flow sensor range/performance",
+    "description": "Measured air mass is outside the expected range for the current operating conditions.",
+    "probable_causes": [
+      "Dirty or faulty MAF sensor",
+      "Air leak after the MAF sensor",
+      "EGR flow deviation affecting air mass readings",
+      "Restricted air filter or intake tract",
+      "Boost leak on turbocharged engines"
+    ],
+    "symptoms": [
+      "Poor acceleration",
+      "Limp mode",
+      "Smoke under load",
+      "Rough idle"
+    ],
+    "step_by_step_fix": [
+      "Inspect the air filter, airbox sealing, and intake hoses after the MAF.",
+      "Check MAF live data at idle and under light load against expected values.",
+      "Inspect boost hoses and intercooler connections for oil mist or splits.",
+      "Check EGR operation because stuck EGR can skew expected air mass on OM651.",
+      "Clean only with proper MAF cleaner or replace the MAF if readings remain implausible.",
+      "Clear codes and road-test while logging MAF, boost, and EGR values."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Keep hands and tools away from moving belts and fans while checking live data with the engine running.",
+    "sources": [
+      "Internal seed knowledge based on Mercedes diesel air-path diagnostics"
+    ]
+  },
+  {
+    "code": "P0299",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "Turbocharger underboost",
+    "description": "Boost pressure is lower than the ECU target under load.",
+    "probable_causes": [
+      "Split boost hose or loose intercooler connection",
+      "Vacuum/control fault for turbo actuator where applicable",
+      "Sticking turbo actuator or vane mechanism",
+      "Blocked DPF causing abnormal exhaust backpressure",
+      "Faulty boost pressure sensor"
+    ],
+    "symptoms": [
+      "Reduced power",
+      "Limp mode",
+      "Whistling or hissing under acceleration",
+      "Black smoke on diesel variants"
+    ],
+    "step_by_step_fix": [
+      "Inspect charge-air hoses from turbo to intercooler and intake for splits or oil stains.",
+      "Check boost pressure requested versus actual during a controlled road test.",
+      "Inspect vacuum lines, pressure converter, and turbo actuator movement where fitted.",
+      "Check boost/MAP sensor readings and connector condition.",
+      "Evaluate DPF differential pressure if underboost appears with exhaust restriction symptoms.",
+      "Repair leaks or actuator faults, clear codes, and retest under load."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Do not road-test aggressively on public roads. Turbo and exhaust parts can cause burns after running.",
+    "sources": [
+      "Internal seed knowledge based on OM651 boost system patterns"
+    ]
+  },
+  {
+    "code": "P2453",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "DPF differential pressure sensor range/performance",
+    "description": "The DPF pressure sensor signal is implausible or out of expected range.",
+    "probable_causes": [
+      "Faulty differential pressure sensor",
+      "Blocked, cracked, or swapped pressure hoses",
+      "Soot-loaded DPF",
+      "Wiring or connector fault",
+      "Exhaust leak affecting pressure reading"
+    ],
+    "symptoms": [
+      "DPF warning",
+      "Limp mode",
+      "Frequent regeneration attempts",
+      "Poor fuel economy"
+    ],
+    "step_by_step_fix": [
+      "Inspect both DPF pressure hoses for cracks, blockage, melting, or reversed connection.",
+      "Read differential pressure at key-on/engine-off; it should be near zero.",
+      "Check differential pressure at idle and under raised RPM to assess soot loading.",
+      "Verify sensor power, ground, and signal integrity.",
+      "Replace the sensor or hoses if readings are implausible before condemning the DPF.",
+      "After repair, reset learned values if required and confirm regeneration readiness."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "DPF regeneration creates very high exhaust temperatures. Do not perform forced regeneration near flammable materials.",
+    "sources": [
+      "Internal seed knowledge based on Mercedes DPF diagnostics"
+    ]
+  },
+  {
+    "code": "P2463",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "DPF soot accumulation",
+    "description": "The ECU estimates excessive soot load in the diesel particulate filter.",
+    "probable_causes": [
+      "Repeated interrupted regenerations",
+      "Faulty DPF differential pressure sensor or hoses",
+      "Thermostat issue preventing correct regeneration temperature",
+      "Injector or boost issue producing excess soot",
+      "Ash/soot-loaded DPF"
+    ],
+    "symptoms": [
+      "DPF warning",
+      "Limp mode",
+      "High fuel consumption",
+      "Cooling fan running after shutdown"
+    ],
+    "step_by_step_fix": [
+      "Check for related codes before attempting regeneration.",
+      "Verify coolant temperature reaches normal operating range.",
+      "Check differential pressure sensor plausibility and hose condition.",
+      "Inspect for boost leaks, injector issues, or EGR problems that increase soot.",
+      "If soot load is within safe limits, perform a service regeneration with proper equipment.",
+      "If ash load is high or pressure remains excessive, remove and professionally clean or replace the DPF."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Forced regeneration can overheat exhaust components. Use professional equipment and keep the vehicle in a safe ventilated area.",
+    "sources": [
+      "Internal seed knowledge based on Mercedes diesel aftertreatment diagnostics"
+    ]
+  },
+  {
+    "code": "P0016",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "Crankshaft/camshaft correlation",
+    "description": "The relationship between crankshaft and camshaft position signals is outside the expected range.",
+    "probable_causes": [
+      "Timing chain stretch or timing deviation",
+      "Faulty camshaft or crankshaft position sensor",
+      "Incorrect timing after repair",
+      "Oil pressure or cam adjuster issue where applicable",
+      "Wiring or connector fault"
+    ],
+    "symptoms": [
+      "Hard start",
+      "Rattle at startup",
+      "Reduced power",
+      "Engine may not start"
+    ],
+    "step_by_step_fix": [
+      "Do not keep driving if chain rattle or severe running issues are present.",
+      "Check for sensor wiring damage and confirm crank/cam signal quality.",
+      "Compare actual cam/crank correlation values with diagnostic equipment.",
+      "Inspect timing chain noise, tensioner condition, and service history.",
+      "If timing deviation is confirmed, inspect/replace timing chain components before engine damage occurs.",
+      "Clear codes and verify correlation values after repair."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Incorrect timing repair can cause major engine damage. Do not crank repeatedly if mechanical timing is suspect.",
+    "sources": [
+      "Internal seed knowledge based on OM651 timing-chain symptom patterns"
+    ]
+  },
+  {
+    "code": "P200A",
+    "make": "Mercedes-Benz",
+    "engine": "OM651",
+    "title": "Intake manifold runner performance",
+    "description": "The intake runner/swirl flap system is not performing as expected.",
+    "probable_causes": [
+      "Swirl flap mechanism sticking from carbon/oil deposits",
+      "Faulty intake runner actuator",
+      "Broken linkage or worn flap mechanism",
+      "Wiring or connector fault",
+      "Intake manifold internal wear"
+    ],
+    "symptoms": [
+      "Limp mode",
+      "Poor low-RPM response",
+      "Check engine light",
+      "Smoke or rough running"
+    ],
+    "step_by_step_fix": [
+      "Inspect actuator connector and wiring.",
+      "Command the intake runner actuator with a scanner if supported.",
+      "Check linkage movement and look for broken or disconnected parts.",
+      "Inspect intake for heavy carbon contamination.",
+      "Clean or replace affected intake runner components/manifold as needed.",
+      "Clear adaptations or perform actuator relearn where required."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Avoid dropping debris into the intake ports. Cover exposed openings during manifold work.",
+    "sources": [
+      "Internal seed knowledge based on Mercedes diesel intake runner diagnostics"
+    ]
+  }
+]

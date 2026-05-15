@@ -1,0 +1,21 @@
+# Python
+backend/.env
+backend/knowledge/diagnostics.db
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node / Expo
+app/node_modules/
+app/.expo/
+app/dist/
+app/web-build/
+app/.env
+
+# Portable Node.js (see scripts/setup.ps1)
+tools/node/
+tools/*.zip
+
+# OS
+.DS_Store
+Thumbs.db

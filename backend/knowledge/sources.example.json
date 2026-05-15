@@ -1,0 +1,10 @@
+{
+  "sources": [
+    {
+      "name": "Example public forum thread",
+      "url": "https://example.com/forum/thread-about-p0420",
+      "enabled": false,
+      "notes": "Replace with public URLs that allow crawling. Keep enabled=false until reviewed."
+    }
+  ]
+}

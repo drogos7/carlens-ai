@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Diagnostic Scan",
+    "slug": "diagnostic-scan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d0f12"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "The app uses the camera to photograph the diagnostic scanner screen.",
+        "NSPhotoLibraryUsageDescription": "The app accesses the photo library to upload an image of the error code."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d0f12"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses photos to analyze the diagnostic scanner screen.",
+          "cameraPermission": "The app uses the camera to photograph the diagnostic scanner screen."
+        }
+      ]
+    ]
+  }
+}
