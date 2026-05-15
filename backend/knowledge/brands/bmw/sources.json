@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "request_delay_seconds": 2.0,
+    "max_pages_per_source": 15,
+    "max_total_pages": 60,
+    "follow_same_domain_links": true,
+    "link_keywords": [
+      "dtc",
+      "fault",
+      "code",
+      "bmw",
+      "e-series",
+      "f30",
+      "f10",
+      "n55",
+      "b58"
+    ]
+  },
+  "sources": []
+}

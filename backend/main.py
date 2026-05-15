@@ -21,16 +21,25 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from dtc_decode import decode_dtc
+from knowledge.brand_registry import (
+    BrandConfig,
+    all_wmi_prefixes,
+    discover_brands,
+    seed_brands_into_db,
+    slug_for_make,
+)
+from nhtsa_vin import fetch_nhtsa_decode, nhtsa_to_vehicle_fields
+from vin_decode import decode_vin
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_DIR = BASE_DIR / "knowledge"
 KNOWLEDGE_DB_PATH = KNOWLEDGE_DIR / "diagnostics.db"
-SEED_CODES_PATH = KNOWLEDGE_DIR / "seed_codes.json"
-SEED_CODES_GLOB = "seed_*.json"
-SEED_VINS_PATH = KNOWLEDGE_DIR / "seed_vins.json"
 VIN_LENGTH = 17
+_BRANDS: list[BrandConfig] = []
 VIN_CHARS = re.compile(r"^[A-HJ-NPR-Z0-9]{17}$")
 
 
@@ -76,6 +85,39 @@ class Difficulty(str, Enum):
     HARD = "Hard"
 
 
+class VinSegmentResponse(BaseModel):
+    label: str
+    positions: str
+    value: str
+    meaning: str
+
+
+class VinDecodeResponse(BaseModel):
+    vin: str
+    wmi: str
+    vds: str
+    vis: str
+    model_year: int | None = None
+    check_digit: str
+    check_digit_valid: bool | None = None
+    summary: str
+    segments: list[VinSegmentResponse]
+
+
+class DtcSegmentResponse(BaseModel):
+    label: str
+    position: str
+    value: str
+    meaning: str
+
+
+class DtcDecodeResponse(BaseModel):
+    code: str
+    is_standard_format: bool
+    summary: str
+    segments: list[DtcSegmentResponse]
+
+
 class AnalyzeErrorResponse(BaseModel):
     """Structured response returned to API clients."""
 
@@ -86,6 +128,8 @@ class AnalyzeErrorResponse(BaseModel):
     vehicle_model: str | None = None
     vehicle_engine: str | None = None
     vehicle_year: int | None = None
+    vin_decode: VinDecodeResponse | None = None
+    dtc_decode: DtcDecodeResponse | None = None
     probable_cause: str
     step_by_step_fix: list[str] = Field(default_factory=list)
     estimated_difficulty: Literal["Easy", "Medium", "Hard"]
@@ -128,9 +172,17 @@ class WmiPrefixResponse(BaseModel):
     notes: str = ""
 
 
+class BrandResponse(BaseModel):
+    slug: str
+    name: str
+    wmi_prefixes: list[str] = Field(default_factory=list)
+    manufacturer_code_pattern: str | None = None
+
+
 class DiagnosticCodeResponse(BaseModel):
     code: str
     make: str
+    brand_slug: str | None = None
     engine: str
     title: str
     description: str
@@ -153,6 +205,19 @@ class SourceMentionResponse(BaseModel):
     url: str
     title: str
     snippet: str
+
+
+class VinMentionResponse(BaseModel):
+    vin: str
+    url: str
+    title: str
+    snippet: str
+
+
+class SourceSearchResponse(BaseModel):
+    query: str
+    code_mentions: list[SourceMentionResponse]
+    vin_mentions: list[VinMentionResponse]
 
 
 class VisionExtraction(BaseModel):
@@ -185,9 +250,12 @@ def _decode_json(value: str) -> list[str]:
 
 
 def _row_to_diagnostic_code(row: sqlite3.Row) -> DiagnosticCodeResponse:
+    keys = row.keys()
+    brand_slug = str(row["brand_slug"]) if "brand_slug" in keys and row["brand_slug"] else None
     return DiagnosticCodeResponse(
         code=row["code"],
         make=row["make"],
+        brand_slug=brand_slug,
         engine=row["engine"],
         title=row["title"],
         description=row["description"],
@@ -200,14 +268,81 @@ def _row_to_diagnostic_code(row: sqlite3.Row) -> DiagnosticCodeResponse:
     )
 
 
+def _vin_decode_to_response(vin: str) -> VinDecodeResponse | None:
+    wmi = _lookup_wmi(vin[:3])
+    decoded = decode_vin(
+        vin,
+        wmi_make=wmi.make if wmi else None,
+        wmi_country=wmi.country if wmi else None,
+        wmi_manufacturer=wmi.manufacturer if wmi else None,
+    )
+    if not decoded:
+        return None
+    return VinDecodeResponse(
+        vin=decoded.vin,
+        wmi=decoded.wmi,
+        vds=decoded.vds,
+        vis=decoded.vis,
+        model_year=decoded.model_year,
+        check_digit=decoded.check_digit,
+        check_digit_valid=decoded.check_digit_valid,
+        summary=decoded.summary,
+        segments=[
+            VinSegmentResponse(label=s.label, positions=s.positions, value=s.value, meaning=s.meaning)
+            for s in decoded.segments
+        ],
+    )
+
+
+def _dtc_decode_to_response(code: str) -> DtcDecodeResponse | None:
+    decoded = decode_dtc(code)
+    if not decoded:
+        return None
+    return DtcDecodeResponse(
+        code=decoded.code,
+        is_standard_format=decoded.is_standard_format,
+        summary=decoded.summary,
+        segments=[
+            DtcSegmentResponse(label=s.label, position=s.position, value=s.value, meaning=s.meaning)
+            for s in decoded.segments
+        ],
+    )
+
+
 def _diagnostic_to_analyze_response(item: DiagnosticCodeResponse) -> AnalyzeErrorResponse:
     return AnalyzeErrorResponse(
         scan_type="dtc",
         detected_code=item.code,
+        dtc_decode=_dtc_decode_to_response(item.code),
         probable_cause="\n".join([item.title, item.description, *item.probable_causes]),
         step_by_step_fix=item.step_by_step_fix,
         estimated_difficulty=item.difficulty,
         safety_warning=item.safety_warning,
+    )
+
+
+def _unknown_manufacturer_code_response(primary: str, all_codes: list[str]) -> AnalyzeErrorResponse:
+    others = [code for code in all_codes if code != primary]
+    lines = [
+        f"BMW manufacturer-specific fault code {primary} detected on the diagnostic display.",
+    ]
+    if others:
+        lines.append(f"Additional codes on screen: {', '.join(others)}.")
+    lines.append("This code is not in the local repair database yet.")
+    return AnalyzeErrorResponse(
+        scan_type="dtc",
+        detected_code=primary,
+        probable_cause="\n".join(lines),
+        step_by_step_fix=[
+            f"Look up BMW code {primary} in ISTA, technical documentation, or a BMW-specific forum.",
+            "Address the highest-priority / recurring code first if multiple faults are present.",
+            "Clear faults after repair and confirm they do not return after a drive cycle.",
+        ],
+        estimated_difficulty="Medium",
+        safety_warning=(
+            "BMW hex codes (E-prefix) are manufacturer-specific. Verify with official BMW diagnostics "
+            "before replacing major components."
+        ),
     )
 
 
@@ -226,7 +361,8 @@ def _row_to_vin_vehicle(row: sqlite3.Row) -> VinVehicleResponse:
 
 
 def _vin_to_analyze_response(vehicle: VinVehicleResponse) -> AnalyzeErrorResponse:
-    year_part = str(vehicle.year) if vehicle.year else "Unknown year"
+    year = vehicle.year
+    year_part = str(year) if year else "Unknown year"
     summary = f"{year_part} {vehicle.make} {vehicle.model}".strip()
     if vehicle.trim:
         summary += f" ({vehicle.trim})"
@@ -247,7 +383,8 @@ def _vin_to_analyze_response(vehicle: VinVehicleResponse) -> AnalyzeErrorRespons
         vehicle_make=vehicle.make,
         vehicle_model=vehicle.model,
         vehicle_engine=vehicle.engine,
-        vehicle_year=vehicle.year,
+        vehicle_year=year,
+        vin_decode=None,
         probable_cause="\n".join(details),
         step_by_step_fix=steps,
         estimated_difficulty="Easy",
@@ -259,8 +396,9 @@ def _vin_to_analyze_response(vehicle: VinVehicleResponse) -> AnalyzeErrorRespons
 
 
 def _wmi_to_analyze_response(wmi: WmiPrefixResponse, vin: str) -> AnalyzeErrorResponse:
+    normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
     details = [
-        f"Partial VIN decode for {vin}",
+        f"VIN {normalized}",
         f"Manufacturer: {wmi.make}",
         f"WMI prefix {wmi.wmi} — {wmi.manufacturer or wmi.make}",
     ]
@@ -273,9 +411,11 @@ def _wmi_to_analyze_response(wmi: WmiPrefixResponse, vin: str) -> AnalyzeErrorRe
     )
     return AnalyzeErrorResponse(
         scan_type="vin",
-        detected_code=vin,
-        detected_vin=vin,
+        detected_code=normalized,
+        detected_vin=normalized,
         vehicle_make=wmi.make,
+        vehicle_year=None,
+        vin_decode=None,
         probable_cause="\n".join(details),
         step_by_step_fix=[
             "Photograph the full 17-character VIN clearly if any characters were misread.",
@@ -309,7 +449,52 @@ VIN_BLACKLIST_FRAGMENTS = (
     "DISPLAY",
     "SCAN",
     "BOSS",
+    "PARK",
+    "ORIG",
+    "1G1NA",
+    "CODES",
+    "ACTIVE",
+    "ENV1",
+    "ENV2",
+    "KMERR",
+    "DTCE",
 )
+
+def _known_wmi_prefixes() -> tuple[str, ...]:
+    if _BRANDS:
+        return all_wmi_prefixes(_BRANDS)
+    return (
+        "WDD",
+        "WDB",
+        "WDC",
+        "WDF",
+        "W1K",
+        "W1N",
+        "WBA",
+        "WBS",
+        "WBX",
+        "WBY",
+        "WBM",
+    )
+
+
+def _brand_slugs_for_scan() -> list[str]:
+    if _BRANDS:
+        return [b.slug for b in _BRANDS]
+    return ["mercedes-benz", "bmw"]
+
+
+def _infer_brand_slug_from_scan(text: str) -> str | None:
+    if _manufacturer_codes_from_text(text):
+        return "bmw"
+    upper = text.upper()
+    for brand in _BRANDS:
+        if brand.name.upper() in upper or brand.slug.replace("-", " ").upper() in upper:
+            return brand.slug
+    return None
+
+# BMW manufacturer-specific hex codes (E + 5 hex digits), common on iDrive fault lists.
+BMW_MFG_CODE_PATTERN = re.compile(r"\bE[0-9A-F]{5}\b", re.IGNORECASE)
 
 
 def _is_valid_vin(vin: str) -> bool:
@@ -364,7 +549,6 @@ def _candidate_vins_from_text(text: str) -> list[str]:
         return _rank_vin_candidates(vins)
 
     compact = _compact_alnum(text)
-    mercedes_prefixes = ("WDD", "WDB", "WDC", "WDF", "W1K", "W1N")
 
     if _text_has_vin_label(text):
         for match in re.finditer(r"VIN", text, re.IGNORECASE):
@@ -378,12 +562,8 @@ def _candidate_vins_from_text(text: str) -> list[str]:
             for window in _vin_windows_from_compact(slice_compact):
                 if window not in vins:
                     vins.append(window)
-    elif len(compact) <= 400:
-        for window in _vin_windows_from_compact(compact):
-            if window not in vins:
-                vins.append(window)
     else:
-        for prefix in mercedes_prefixes:
+        for prefix in _known_wmi_prefixes():
             index = compact.find(prefix)
             if index < 0:
                 continue
@@ -395,6 +575,36 @@ def _candidate_vins_from_text(text: str) -> list[str]:
                 break
 
     return _rank_vin_candidates(vins[:24])
+
+
+def _manufacturer_codes_from_text(text: str) -> list[str]:
+    codes: list[str] = []
+    for match in BMW_MFG_CODE_PATTERN.finditer(text):
+        code = match.group(0).upper()
+        if code not in codes:
+            codes.append(code)
+    return codes
+
+
+def _text_indicates_fault_code_screen(text: str) -> bool:
+    upper = text.upper()
+    screen_markers = (
+        "ERROR CODE",
+        "ERROR CODES",
+        "FAULT CODE",
+        "NO.DTC",
+        "NO DTC",
+        "ENV1",
+        "ENV2",
+        "ACTIVE",
+    )
+    if any(marker in upper for marker in screen_markers):
+        return True
+    if _candidate_codes_from_text(text):
+        return True
+    if _manufacturer_codes_from_text(text):
+        return True
+    return False
 
 
 def _rank_vin_candidates(candidates: list[str]) -> list[str]:
@@ -436,6 +646,33 @@ def _candidate_is_inside_vin(candidate: str, text: str, vin_windows: list[str] |
     return False
 
 
+def _upsert_vin_vehicle(data: dict[str, str | int | None]) -> VinVehicleResponse:
+    with _db_connection() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO vin_vehicles (
+                vin, make, model, engine, year, body_style, trim, notes, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            (
+                str(data["vin"]),
+                str(data["make"]),
+                str(data["model"]),
+                str(data["engine"]),
+                data.get("year"),
+                str(data.get("body_style") or ""),
+                str(data.get("trim") or ""),
+                str(data.get("notes") or ""),
+            ),
+        )
+        conn.commit()
+    vehicle = _lookup_vin(str(data["vin"]))
+    if not vehicle:
+        raise RuntimeError("Failed to persist VIN vehicle record.")
+    return vehicle
+
+
 def _lookup_vin(vin: str) -> VinVehicleResponse | None:
     normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
     if not _is_plausible_vin(normalized):
@@ -443,6 +680,17 @@ def _lookup_vin(vin: str) -> VinVehicleResponse | None:
     with _db_connection() as conn:
         row = conn.execute("SELECT * FROM vin_vehicles WHERE vin = ?", (normalized,)).fetchone()
     return _row_to_vin_vehicle(row) if row else None
+
+
+def _fetch_and_cache_nhtsa_vin(vin: str) -> VinVehicleResponse | None:
+    normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
+    if not _is_plausible_vin(normalized):
+        return None
+    fields = fetch_nhtsa_decode(normalized)
+    if not fields:
+        return None
+    payload = nhtsa_to_vehicle_fields(normalized, fields)
+    return _upsert_vin_vehicle(payload)
 
 
 def _lookup_wmi(wmi: str) -> WmiPrefixResponse | None:
@@ -471,21 +719,29 @@ def _detect_vin_from_text(text: str) -> tuple[str | None, list[str]]:
 
 
 def _resolve_vin_scan(text: str) -> AnalyzeErrorResponse | None:
-    vin, candidates = _detect_vin_from_text(text)
     has_vin_label = _text_has_vin_label(text)
+    if _text_indicates_fault_code_screen(text) and not has_vin_label:
+        return None
+
+    vin, candidates = _detect_vin_from_text(text)
     if not vin and not candidates and not has_vin_label:
         return None
 
     primary = vin or (candidates[0] if candidates else None)
     if primary:
-        vehicle = _lookup_vin(primary)
+        normalized_primary = _normalize_vin_chars(primary)[:VIN_LENGTH]
+        vehicle = _lookup_vin(normalized_primary)
         if vehicle:
             return _vin_to_analyze_response(vehicle)
 
-        if _is_plausible_vin(primary[:VIN_LENGTH]) or len(primary) >= VIN_LENGTH:
-            wmi = _lookup_wmi(primary[:3])
+        if _is_plausible_vin(normalized_primary):
+            vehicle = _fetch_and_cache_nhtsa_vin(normalized_primary)
+            if vehicle:
+                return _vin_to_analyze_response(vehicle)
+
+            wmi = _lookup_wmi(normalized_primary[:3])
             if wmi:
-                return _wmi_to_analyze_response(wmi, primary[:VIN_LENGTH] if len(primary) >= VIN_LENGTH else primary)
+                return _wmi_to_analyze_response(wmi, normalized_primary)
 
     if has_vin_label or candidates:
         partial = primary or "unknown"
@@ -672,6 +928,8 @@ def _ocr_has_usable_signal(text: str) -> bool:
         return True
     if _candidate_codes_from_text(text):
         return True
+    if _manufacturer_codes_from_text(text):
+        return True
     return False
 
 
@@ -691,19 +949,34 @@ def _detect_known_code_from_text(text: str) -> tuple[str | None, list[str]]:
         return None, []
 
     vin_windows = _candidate_vins_from_text(text)
+    mfg_codes = _manufacturer_codes_from_text(text)
     known_matches = _known_code_matches_from_text(text)
     strict_candidates = _candidate_codes_from_text(text, vin_windows=vin_windows)
     fuzzy_candidates = _fuzzy_candidate_codes_from_text(text, vin_windows=vin_windows)
     candidates = [*known_matches]
+    for candidate in mfg_codes:
+        if candidate not in candidates:
+            candidates.append(candidate)
     for candidate in strict_candidates:
         if candidate not in candidates:
             candidates.append(candidate)
     for match in _fuzzy_known_code_matches([*strict_candidates, *fuzzy_candidates]):
         if match not in candidates:
             candidates.insert(0, match)
+    scan_slugs = _brand_slugs_for_scan()
+    inferred = _infer_brand_slug_from_scan(text)
+    if inferred:
+        scan_slugs = [inferred, *[slug for slug in scan_slugs if slug != inferred]]
     for candidate in candidates:
-        if _lookup_code(candidate, make="Mercedes-Benz"):
-            return candidate, candidates
+        for slug in scan_slugs:
+            hit = _lookup_code(candidate, brand_slug=slug)
+            if hit:
+                return candidate, candidates
+        for brand in _BRANDS:
+            if _lookup_code(candidate, make=brand.name):
+                return candidate, candidates
+    if mfg_codes:
+        return mfg_codes[0], candidates
     return (strict_candidates[0], candidates) if strict_candidates else (None, candidates)
 
 
@@ -751,37 +1024,23 @@ def _init_knowledge_db() -> None:
             )
             """
         )
-        seed_paths = sorted(KNOWLEDGE_DIR.glob(SEED_CODES_GLOB))
-        if not seed_paths:
-            logger.warning("Knowledge seed files missing: %s", KNOWLEDGE_DIR / SEED_CODES_GLOB)
-            return
-        for seed_path in seed_paths:
-            if seed_path.name == SEED_VINS_PATH.name:
-                continue
-            seed_items = json.loads(seed_path.read_text(encoding="utf-8"))
-            for item in seed_items:
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO diagnostic_codes (
-                        code, make, engine, title, description, probable_causes, symptoms,
-                        step_by_step_fix, difficulty, safety_warning, sources, updated_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    """,
-                    (
-                        _normalize_code(item["code"]),
-                        item["make"],
-                        item["engine"],
-                        item["title"],
-                        item["description"],
-                        _encode_json(item["probable_causes"]),
-                        _encode_json(item["symptoms"]),
-                        _encode_json(item["step_by_step_fix"]),
-                        item["difficulty"],
-                        item["safety_warning"],
-                        _encode_json(item["sources"]),
-                    ),
-                )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS vin_mentions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vin TEXT NOT NULL,
+                source_document_id INTEGER NOT NULL,
+                snippet TEXT NOT NULL,
+                FOREIGN KEY (source_document_id) REFERENCES source_documents(id)
+            )
+            """
+        )
+        global _BRANDS
+        _BRANDS = seed_brands_into_db(
+            conn,
+            normalize_code=_normalize_code,
+            encode_json=_encode_json,
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS vin_vehicles (
@@ -809,53 +1068,22 @@ def _init_knowledge_db() -> None:
             )
             """
         )
-        if SEED_VINS_PATH.exists():
-            seed_vins = json.loads(SEED_VINS_PATH.read_text(encoding="utf-8"))
-            for item in seed_vins.get("vehicles", []):
-                vin = _normalize_vin_chars(item["vin"])[:VIN_LENGTH]
-                if not _is_valid_vin(vin):
-                    continue
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO vin_vehicles (
-                        vin, make, model, engine, year, body_style, trim, notes, updated_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    """,
-                    (
-                        vin,
-                        item["make"],
-                        item["model"],
-                        item["engine"],
-                        item.get("year"),
-                        item.get("body_style", ""),
-                        item.get("trim", ""),
-                        item.get("notes", ""),
-                    ),
-                )
-            for item in seed_vins.get("wmi_prefixes", []):
-                wmi = _normalize_vin_chars(item["wmi"])[:3]
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO vin_wmi (wmi, make, country, manufacturer, notes, updated_at)
-                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    """,
-                    (
-                        wmi,
-                        item["make"],
-                        item.get("country", ""),
-                        item.get("manufacturer", ""),
-                        item.get("notes", ""),
-                    ),
-                )
         conn.commit()
 
 
-def _lookup_code(code: str, make: str | None = None, engine: str | None = None) -> DiagnosticCodeResponse | None:
+def _lookup_code(
+    code: str,
+    make: str | None = None,
+    engine: str | None = None,
+    brand_slug: str | None = None,
+) -> DiagnosticCodeResponse | None:
     normalized = _normalize_code(code)
     clauses = ["code = ?"]
     params: list[str] = [normalized]
-    if make:
+    if brand_slug:
+        clauses.append("brand_slug = ?")
+        params.append(brand_slug)
+    elif make:
         clauses.append("LOWER(make) LIKE LOWER(?)")
         params.append(f"%{make}%")
     if engine:
@@ -871,7 +1099,12 @@ def _lookup_code(code: str, make: str | None = None, engine: str | None = None) 
     return _row_to_diagnostic_code(row) if row else None
 
 
-def _search_codes(query: str, make: str | None = None, engine: str | None = None) -> list[DiagnosticCodeResponse]:
+def _search_codes(
+    query: str,
+    make: str | None = None,
+    engine: str | None = None,
+    brand_slug: str | None = None,
+) -> list[DiagnosticCodeResponse]:
     q = query.strip()
     normalized_code = _normalize_code(q)
     like = f"%{q}%"
@@ -880,7 +1113,10 @@ def _search_codes(query: str, make: str | None = None, engine: str | None = None
         "OR LOWER(probable_causes) LIKE LOWER(?) OR LOWER(symptoms) LIKE LOWER(?))"
     ]
     params: list[str] = [f"%{normalized_code}%", like, like, like, like]
-    if make:
+    if brand_slug:
+        clauses.append("brand_slug = ?")
+        params.append(brand_slug)
+    elif make:
         clauses.append("LOWER(make) LIKE LOWER(?)")
         params.append(f"%{make}%")
     if engine:
@@ -914,6 +1150,49 @@ def _source_mentions_for_code(code: str) -> list[SourceMentionResponse]:
         SourceMentionResponse(code=row["code"], url=row["url"], title=row["title"], snippet=row["snippet"])
         for row in rows
     ]
+
+
+def _search_knowledge_sources(query: str, limit: int = 20) -> SourceSearchResponse:
+    q = query.strip()
+    like = f"%{q}%"
+    normalized_code = _normalize_code(q)
+    normalized_vin = _normalize_vin_chars(q)[:VIN_LENGTH] if len(q) >= 11 else q.upper()
+
+    with _db_connection() as conn:
+        code_rows = conn.execute(
+            """
+            SELECT cm.code, sd.url, sd.title, cm.snippet
+            FROM code_mentions cm
+            JOIN source_documents sd ON sd.id = cm.source_document_id
+            WHERE cm.code LIKE ? OR LOWER(cm.snippet) LIKE LOWER(?) OR LOWER(sd.content) LIKE LOWER(?)
+            ORDER BY sd.fetched_at DESC
+            LIMIT ?
+            """,
+            (f"%{normalized_code}%", like, like, limit),
+        ).fetchall()
+        vin_rows = conn.execute(
+            """
+            SELECT vm.vin, sd.url, sd.title, vm.snippet
+            FROM vin_mentions vm
+            JOIN source_documents sd ON sd.id = vm.source_document_id
+            WHERE vm.vin LIKE ? OR LOWER(vm.snippet) LIKE LOWER(?) OR LOWER(sd.content) LIKE LOWER(?)
+            ORDER BY sd.fetched_at DESC
+            LIMIT ?
+            """,
+            (f"%{normalized_vin}%", like, like, limit),
+        ).fetchall()
+
+    return SourceSearchResponse(
+        query=q,
+        code_mentions=[
+            SourceMentionResponse(code=row["code"], url=row["url"], title=row["title"], snippet=row["snippet"])
+            for row in code_rows
+        ],
+        vin_mentions=[
+            VinMentionResponse(vin=row["vin"], url=row["url"], title=row["title"], snippet=row["snippet"])
+            for row in vin_rows
+        ],
+    )
 
 
 def _build_system_prompt() -> str:
@@ -1136,6 +1415,37 @@ def _vision_api_configured() -> bool:
     return False
 
 
+@app.get("/brands", response_model=list[BrandResponse])
+async def list_brands() -> list[BrandResponse]:
+    """Registered vehicle brands and their knowledge libraries."""
+    if _BRANDS:
+        return [
+            BrandResponse(
+                slug=brand.slug,
+                name=brand.name,
+                wmi_prefixes=list(brand.wmi_prefixes),
+                manufacturer_code_pattern=brand.manufacturer_code_pattern,
+            )
+            for brand in _BRANDS
+        ]
+    with _db_connection() as conn:
+        rows = conn.execute(
+            "SELECT slug, name, wmi_prefixes, code_patterns FROM brands ORDER BY sort_order, name"
+        ).fetchall()
+    results: list[BrandResponse] = []
+    for row in rows:
+        patterns = json.loads(row["code_patterns"] or "{}")
+        results.append(
+            BrandResponse(
+                slug=row["slug"],
+                name=row["name"],
+                wmi_prefixes=json.loads(row["wmi_prefixes"] or "[]"),
+                manufacturer_code_pattern=patterns.get("manufacturer_hex"),
+            )
+        )
+    return results
+
+
 @app.get("/health")
 async def health() -> dict[str, str | bool]:
     configured = _vision_api_configured()
@@ -1152,8 +1462,18 @@ async def health() -> dict[str, str | bool]:
 
 
 @app.get("/codes/{code}", response_model=DiagnosticCodeResponse)
-async def get_code(code: str, make: str | None = "Mercedes-Benz", engine: str | None = None) -> DiagnosticCodeResponse:
-    result = _lookup_code(code, make=make, engine=engine)
+async def get_code(
+    code: str,
+    make: str | None = "Mercedes-Benz",
+    brand: str | None = None,
+    engine: str | None = None,
+) -> DiagnosticCodeResponse:
+    result = _lookup_code(
+        code,
+        make=None if brand else make,
+        brand_slug=brand,
+        engine=engine,
+    )
     if result:
         return result
     raise HTTPException(
@@ -1166,9 +1486,15 @@ async def get_code(code: str, make: str | None = "Mercedes-Benz", engine: str | 
 async def search_knowledge(
     q: str,
     make: str | None = "Mercedes-Benz",
+    brand: str | None = None,
     engine: str | None = None,
 ) -> KnowledgeSearchResponse:
-    results = _search_codes(q, make=make, engine=engine)
+    results = _search_codes(
+        q,
+        make=None if brand else make,
+        brand_slug=brand,
+        engine=engine,
+    )
     return KnowledgeSearchResponse(query=q, count=len(results), results=results)
 
 
@@ -1177,24 +1503,124 @@ async def get_code_sources(code: str) -> list[SourceMentionResponse]:
     return _source_mentions_for_code(code)
 
 
+@app.get("/lookup", response_model=AnalyzeErrorResponse)
+async def lookup_manual(q: str, make: str | None = "Mercedes-Benz") -> AnalyzeErrorResponse:
+    """
+    Look up a 5-character OBD-II code or 17-character VIN entered manually.
+    Returns DTC structure decode (dtc_decode) when applicable; VIN lookups return vehicle info only.
+    """
+    raw = q.strip()
+    if not raw:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Enter an OBD-II code (e.g. P0420) or a 17-character VIN.",
+        )
+
+    normalized_vin = _normalize_vin_chars(raw)[:VIN_LENGTH]
+    if len(normalized_vin) == VIN_LENGTH and _is_plausible_vin(normalized_vin):
+        vehicle = _lookup_vin(normalized_vin)
+        if vehicle:
+            return _vin_to_analyze_response(vehicle)
+        vehicle = _fetch_and_cache_nhtsa_vin(normalized_vin)
+        if vehicle:
+            return _vin_to_analyze_response(vehicle)
+        wmi = _lookup_wmi(normalized_vin[:3])
+        if wmi:
+            return _wmi_to_analyze_response(wmi, normalized_vin)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid VIN: {raw!r}",
+        )
+
+    code = _normalize_code(raw)
+    if len(code) != 5:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Enter a 5-character OBD code (e.g. P0420) or a full 17-character VIN.",
+        )
+
+    item = _lookup_code(code, make=make)
+    if item:
+        return _diagnostic_to_analyze_response(item)
+
+    dtc_decoded = _dtc_decode_to_response(code)
+    if dtc_decoded:
+        return AnalyzeErrorResponse(
+            scan_type="dtc",
+            detected_code=code,
+            dtc_decode=dtc_decoded,
+            probable_cause="\n".join(
+                [
+                    f"{code} is not in the repair database yet.",
+                    dtc_decoded.summary,
+                ]
+            ),
+            step_by_step_fix=[
+                "Use the code structure above to verify the scanner read the correct fault.",
+                "Search manufacturer TSBs and forums for this code on your vehicle.",
+                f"Add {code} to the local database to unlock step-by-step repair instructions.",
+            ],
+            estimated_difficulty="Medium",
+            safety_warning="Follow workshop safety practices when testing or repairing this system.",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=f"Could not interpret {raw!r} as an OBD-II code or VIN.",
+    )
+
+
+@app.get("/vins/{vin}/decode", response_model=VinDecodeResponse)
+async def decode_vin_endpoint(vin: str) -> VinDecodeResponse:
+    normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
+    decoded = _vin_decode_to_response(normalized)
+    if not decoded:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid VIN length or characters: {vin!r}",
+        )
+    return decoded
+
+
+@app.get("/codes/{code}/decode", response_model=DtcDecodeResponse)
+async def decode_code_endpoint(code: str) -> DtcDecodeResponse:
+    decoded = _dtc_decode_to_response(_normalize_code(code))
+    if not decoded:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Not a valid 5-character OBD-II code: {code!r}",
+        )
+    return decoded
+
+
 @app.get("/vins/{vin}", response_model=VinVehicleResponse)
 async def get_vin(vin: str) -> VinVehicleResponse:
-    item = _lookup_vin(vin)
+    normalized = _normalize_vin_chars(vin)[:VIN_LENGTH]
+    item = _lookup_vin(normalized)
+    if not item and _is_plausible_vin(normalized):
+        item = _fetch_and_cache_nhtsa_vin(normalized)
     if not item:
-        wmi = _lookup_wmi(vin)
-        if wmi and _is_valid_vin(_normalize_vin_chars(vin)[:VIN_LENGTH]):
+        wmi = _lookup_wmi(normalized)
+        if wmi and _is_plausible_vin(normalized):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail={
-                    "message": f"VIN {_normalize_vin_chars(vin)[:VIN_LENGTH]} is not in the database, but WMI {wmi.wmi} maps to {wmi.make}.",
+                    "message": f"VIN {normalized} is not in the database, but WMI {wmi.wmi} maps to {wmi.make}.",
                     "wmi": wmi.model_dump(),
                 },
             )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No vehicle record found for VIN {_normalize_vin_chars(vin)[:VIN_LENGTH]}.",
+            detail=f"No vehicle record found for VIN {normalized}.",
         )
     return item
+
+
+@app.get("/knowledge/sources/search", response_model=SourceSearchResponse)
+async def search_ingested_sources(q: str) -> SourceSearchResponse:
+    if not q.strip():
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Query parameter q is required.")
+    return _search_knowledge_sources(q)
 
 
 @app.post("/scan-error-local", response_model=AnalyzeErrorResponse)
@@ -1229,14 +1655,32 @@ async def scan_error_local(image: UploadFile = File(..., description="Diagnostic
             },
         )
 
-    item = _lookup_code(code, make="Mercedes-Benz")
+    item = None
+    inferred = _infer_brand_slug_from_scan(text)
+    lookup_slugs = [inferred] if inferred else []
+    lookup_slugs.extend(slug for slug in _brand_slugs_for_scan() if slug not in lookup_slugs)
+    for slug in lookup_slugs:
+        item = _lookup_code(code, brand_slug=slug)
+        if item:
+            break
     if not item:
+        for brand in _BRANDS:
+            item = _lookup_code(code, make=brand.name)
+            if item:
+                break
+    if not item:
+        mfg_codes = _manufacturer_codes_from_text(text)
+        if code in mfg_codes or code.startswith("E"):
+            return _unknown_manufacturer_code_response(code, mfg_codes or candidates)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": f"OCR found {code}, but the code is not in the local DB yet.",
                 "detected_candidates": candidates,
                 "ocr_text": text,
+                "dtc_decode": (
+                    (decoded := _dtc_decode_to_response(code)).model_dump() if decoded else None
+                ),
             },
         )
     return _diagnostic_to_analyze_response(item)

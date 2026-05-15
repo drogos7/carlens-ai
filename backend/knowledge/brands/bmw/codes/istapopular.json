@@ -1,0 +1,157 @@
+[
+  {
+    "code": "E12C11",
+    "make": "BMW",
+    "engine": "Generic",
+    "title": "Gear selector / transmission range sensor",
+    "description": "BMW manufacturer code indicating a fault in the gear selector or transmission range detection circuit (common on automatic models).",
+    "probable_causes": [
+      "Faulty gear selector switch or position sensor",
+      "Wiring or connector corrosion at the selector module",
+      "Low transmission fluid level or degraded fluid",
+      "Internal transmission range sensor failure"
+    ],
+    "symptoms": [
+      "Check engine / transmission warning",
+      "Gear indicator mismatch or flashing PRND",
+      "Limp mode or failure to engage drive/reverse",
+      "Stored fault on iDrive fault code list"
+    ],
+    "step_by_step_fix": [
+      "Read the full fault list in ISTA/INPA and note freeze-frame data.",
+      "Inspect gear selector wiring and connectors for corrosion or bent pins.",
+      "Verify transmission fluid level and condition per BMW spec.",
+      "Test selector position signals with a scan tool; replace the selector/sensor if out of range.",
+      "Clear faults and verify gear engagement through all positions after repair."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Secure the vehicle on level ground with parking brake applied before testing gear selection. Follow BMW high-voltage safety if working on hybrid models.",
+    "sources": [
+      "CarLens AI seed — common BMW iDrive fault list pattern (E12C11)"
+    ]
+  },
+  {
+    "code": "E11490",
+    "make": "BMW",
+    "engine": "Generic",
+    "title": "Network / module communication fault",
+    "description": "BMW hex code typically related to communication or message timeout on a vehicle bus (PT-CAN, K-CAN, or module-specific).",
+    "probable_causes": [
+      "Intermittent CAN bus wiring or termination issue",
+      "Failing control module not responding on the network",
+      "Low battery voltage causing bus errors after start",
+      "Recent retrofit or aftermarket device on the CAN network"
+    ],
+    "symptoms": [
+      "Multiple warning lights on the instrument cluster",
+      "Intermittent loss of features (iDrive, lights, windows)",
+      "Fault stored alongside other U/E series communication codes",
+      "May appear after battery disconnect or coding"
+    ],
+    "step_by_step_fix": [
+      "Check battery state of charge and perform a registered IBSC reset if applicable.",
+      "Scan all modules for additional communication faults and note the master fault.",
+      "Inspect main CAN junction connectors and ground points near affected modules.",
+      "Update module software if BMW TSB applies; replace module only after wiring is verified.",
+      "Clear faults and perform a short road test to confirm stability."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery and wait per BMW procedure before unplugging control modules. Incorrect coding can disable safety systems.",
+    "sources": [
+      "CarLens AI seed — BMW iDrive fault list (E11490)"
+    ]
+  },
+  {
+    "code": "E114DB",
+    "make": "BMW",
+    "engine": "Generic",
+    "title": "Control module / sensor plausibility fault",
+    "description": "BMW manufacturer-specific code indicating implausible or out-of-range data from a monitored sensor or actuator.",
+    "probable_causes": [
+      "Failed sensor providing erratic values",
+      "Mechanical binding preventing expected actuator movement",
+      "Incorrect calibration after repair or battery replacement",
+      "Internal module software or hardware fault"
+    ],
+    "symptoms": [
+      "Check engine or drivetrain warning",
+      "Rough operation or reduced function of affected system",
+      "Code may set with related P-codes on OBD-II layer",
+      "Active flag on iDrive fault code screen"
+    ],
+    "step_by_step_fix": [
+      "Identify the affected system from ISTA fault description and related codes.",
+      "Review live data for the suspect sensor versus commanded values.",
+      "Inspect wiring, vacuum lines, or mechanical linkage as applicable.",
+      "Perform BMW adaptation/calibration procedures after part replacement.",
+      "Clear faults and confirm monitor completion on a test drive."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Do not erase faults without diagnosing the root cause. Some adaptations require dealer-level tools.",
+    "sources": [
+      "CarLens AI seed — BMW iDrive fault list (E114DB)"
+    ]
+  },
+  {
+    "code": "E7C688",
+    "make": "BMW",
+    "engine": "Generic",
+    "title": "Battery management / energy storage fault",
+    "description": "Common BMW hex code family related to battery monitoring, state of charge, or energy management on models with advanced BMS.",
+    "probable_causes": [
+      "Aging battery with reduced capacity",
+      "BMS sensor or current measurement drift",
+      "Parasitic draw preventing proper charge acceptance",
+      "Incorrect battery registration after replacement"
+    ],
+    "symptoms": [
+      "Battery warning on cluster",
+      "Start-stop disabled",
+      "Increased charging voltage requests",
+      "Fault after battery swap without registration"
+    ],
+    "step_by_step_fix": [
+      "Test battery health and charging system voltage under load.",
+      "Register the battery in ISTA after replacement (capacity and type).",
+      "Check for parasitic current draw if battery discharges quickly.",
+      "Inspect BMS wiring at the negative terminal and IBS sensor if fitted.",
+      "Clear faults and monitor sleep current and start-stop operation."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Wear eye protection when working near the battery. Follow BMW battery registration procedure to avoid overcharging.",
+    "sources": [
+      "CarLens AI seed — common BMW BMS-related E-codes"
+    ]
+  },
+  {
+    "code": "P0300",
+    "make": "BMW",
+    "engine": "Generic",
+    "title": "Random/multiple cylinder misfire detected",
+    "description": "Standard OBD-II code: the ECU detected misfires across more than one cylinder or could not isolate a single cylinder.",
+    "probable_causes": [
+      "Worn spark plugs or ignition coils",
+      "Vacuum leak or unmetered air",
+      "Fuel delivery issue (injector, pump, pressure)",
+      "Low compression on one or more cylinders"
+    ],
+    "symptoms": [
+      "Rough idle and vibration",
+      "Loss of power under acceleration",
+      "Check engine light flashing under load",
+      "Fuel smell from unburned fuel"
+    ],
+    "step_by_step_fix": [
+      "Read misfire counters per cylinder in the scan tool.",
+      "Inspect coils, plugs, and boots on affected cylinders first.",
+      "Check for vacuum leaks and intake boot cracks (common on N54/N55).",
+      "Verify fuel pressure and injector balance if ignition is good.",
+      "Clear codes and road-test; replace flashing CEL indicates catalyst damage risk."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "A flashing check engine light means catalyst damage is possible — avoid hard acceleration until repaired.",
+    "sources": [
+      "CarLens AI seed — standard OBD-II on BMW platforms"
+    ]
+  }
+]

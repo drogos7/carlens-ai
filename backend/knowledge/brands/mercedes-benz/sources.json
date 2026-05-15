@@ -1,0 +1,83 @@
+{
+  "settings": {
+    "request_delay_seconds": 2.0,
+    "max_pages_per_source": 25,
+    "max_total_pages": 120,
+    "follow_same_domain_links": true,
+    "link_keywords": [
+      "obd",
+      "dtc",
+      "fault",
+      "code",
+      "p0",
+      "p1",
+      "p2",
+      "p3",
+      "vin",
+      "wmi",
+      "om651",
+      "diesel",
+      "dpf",
+      "egr",
+      "mercedes",
+      "benz",
+      "w221",
+      "w222",
+      "w205",
+      "w204",
+      "s-class",
+      "c-class",
+      "sprinter"
+    ]
+  },
+  "sources": [
+    {
+      "name": "OBD-Codes.com — P0420 reference",
+      "url": "https://www.obd-codes.com/p0420",
+      "enabled": true,
+      "follow_links": false,
+      "notes": "Public OBD code explanations; good for generic DTC seed text."
+    },
+    {
+      "name": "OBD-Codes.com — P0300 misfire",
+      "url": "https://www.obd-codes.com/p0300",
+      "enabled": true,
+      "follow_links": false
+    },
+    {
+      "name": "MBWorld — Diesel forum index",
+      "url": "https://www.mbworld.org/forums/diesel-forum-125/",
+      "enabled": true,
+      "follow_links": true,
+      "notes": "Shallow crawl of diesel forum board for OM651/DPF/EGR threads."
+    },
+    {
+      "name": "MBWorld — W221 S-Class forum",
+      "url": "https://www.mbworld.org/forums/w221-s-class-209/",
+      "enabled": true,
+      "follow_links": true,
+      "notes": "S-Class W221 including S400 Hybrid discussions."
+    },
+    {
+      "name": "MBWorld — homepage",
+      "url": "https://www.mbworld.org/",
+      "enabled": false,
+      "follow_links": true,
+      "notes": "Enable only if robots.txt allows; crawls linked forum boards."
+    },
+    {
+      "name": "BenzWorld — homepage",
+      "url": "https://www.benzworld.org/",
+      "enabled": false,
+      "follow_links": true,
+      "notes": "Check robots.txt before enabling. Add specific thread URLs for best results."
+    },
+    {
+      "name": "MB-Manual",
+      "url": "https://mb-manual.com/",
+      "enabled": false,
+      "follow_links": false,
+      "notes": "Enable only if you have permission / robots.txt allows crawling."
+    }
+  ]
+}

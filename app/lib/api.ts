@@ -3,6 +3,33 @@ import { Platform } from 'react-native';
 /** Set in `app/.env` as EXPO_PUBLIC_API_BASE_URL (e.g. http://10.0.2.2:8000 for Android emulator). */
 const base = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000';
 
+export type DecodeSegment = {
+  label: string;
+  positions?: string;
+  position?: string;
+  value: string;
+  meaning: string;
+};
+
+export type VinDecodeResponse = {
+  vin: string;
+  wmi: string;
+  vds: string;
+  vis: string;
+  model_year: number | null;
+  check_digit: string;
+  check_digit_valid: boolean | null;
+  summary: string;
+  segments: DecodeSegment[];
+};
+
+export type DtcDecodeResponse = {
+  code: string;
+  is_standard_format: boolean;
+  summary: string;
+  segments: DecodeSegment[];
+};
+
 export type AnalyzeResponse = {
   scan_type?: 'dtc' | 'vin';
   detected_code: string;
@@ -11,6 +38,8 @@ export type AnalyzeResponse = {
   vehicle_model?: string | null;
   vehicle_engine?: string | null;
   vehicle_year?: number | null;
+  vin_decode?: VinDecodeResponse | null;
+  dtc_decode?: DtcDecodeResponse | null;
   probable_cause: string;
   step_by_step_fix: string[];
   estimated_difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -123,9 +152,8 @@ export async function analyzeErrorImage(uri: string): Promise<AnalyzeResponse> {
 
 export async function lookupDiagnosticCode(code: string): Promise<AnalyzeResponse> {
   const normalized = code.trim().toUpperCase();
-  const res = await fetch(
-    `${base.replace(/\/$/, '')}/codes/${encodeURIComponent(normalized)}?make=Mercedes-Benz`
-  );
+  const url = `${base.replace(/\/$/, '')}/lookup?q=${encodeURIComponent(normalized)}&make=Mercedes-Benz`;
+  const res = await fetch(url);
   const text = await res.text();
   let json: unknown = null;
   try {
@@ -135,24 +163,28 @@ export async function lookupDiagnosticCode(code: string): Promise<AnalyzeRespons
   }
 
   if (!res.ok) {
-    const err: Error & { status?: number; body?: unknown } = new Error(
+    let message =
       res.status === 404
-        ? `No information found yet for code ${normalized}.`
-        : `Server error (${res.status})`
-    );
+        ? `No information found yet for ${normalized}.`
+        : `Server error (${res.status})`;
+    if (json && typeof json === 'object' && 'detail' in json) {
+      const detail = (json as { detail: unknown }).detail;
+      if (typeof detail === 'string') {
+        message = detail;
+      } else if (typeof detail === 'object' && detail !== null && 'message' in detail) {
+        const maybeMessage = (detail as { message?: unknown }).message;
+        if (typeof maybeMessage === 'string') {
+          message = maybeMessage;
+        }
+      }
+    }
+    const err: Error & { status?: number; body?: unknown } = new Error(message);
     err.status = res.status;
     err.body = json ?? text;
     throw err;
   }
 
-  const data = json as KnowledgeCodeResponse;
-  return {
-    detected_code: data.code,
-    probable_cause: [data.title, data.description, ...data.probable_causes].join('\n'),
-    step_by_step_fix: data.step_by_step_fix,
-    estimated_difficulty: data.difficulty,
-    safety_warning: data.safety_warning,
-  };
+  return json as AnalyzeResponse;
 }
 
 export function getApiBaseUrl(): string {

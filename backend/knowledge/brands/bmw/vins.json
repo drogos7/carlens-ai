@@ -1,0 +1,26 @@
+{
+  "vehicles": [],
+  "wmi_prefixes": [
+    {
+      "wmi": "WBA",
+      "make": "BMW",
+      "country": "Germany",
+      "manufacturer": "BMW AG",
+      "notes": "Passenger cars."
+    },
+    {
+      "wmi": "WBS",
+      "make": "BMW",
+      "country": "Germany",
+      "manufacturer": "BMW M GmbH",
+      "notes": "M models."
+    },
+    {
+      "wmi": "WBX",
+      "make": "BMW",
+      "country": "Germany",
+      "manufacturer": "BMW SUVs",
+      "notes": "SAV / crossover models."
+    }
+  ]
+}

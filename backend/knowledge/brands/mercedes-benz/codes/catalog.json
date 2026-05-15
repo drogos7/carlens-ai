@@ -1,0 +1,1423 @@
+[
+  {
+    "code": "P1856",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Gear selector repair [SOLVED]",
+    "description": "Mercedes-Benz diagnostic trouble code P1856: Gear selector repair [SOLVED]",
+    "probable_causes": [
+      "Gear selector repair [SOLVED]",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P1856 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check transmission fluid level and condition.",
+      "Inspect speed sensor wiring and transmission control module connections.",
+      "Consult transmission-specific repair data before internal repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0138",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Heated Oxygen Sensor (HO2S) Circuit High Voltage Bank 1 Sensor 2",
+    "description": "Mercedes-Benz diagnostic trouble code P0138: Heated Oxygen Sensor (HO2S) Circuit High Voltage Bank 1 Sensor 2",
+    "probable_causes": [
+      "Heated Oxygen Sensor (HO2S) Circuit High Voltage Bank 1 Sensor 2",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0138 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check sensor heater fuse and voltage supply at the sensor connector.",
+      "Measure sensor signal and heater resistance against specification.",
+      "Replace the affected O2 sensor if out of spec; clear codes and verify closed-loop fuel control."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0460",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Fuel Level Sensor Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P0460: Fuel Level Sensor Circuit",
+    "probable_causes": [
+      "Fuel Level Sensor Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0460 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0150",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Heated Oxygen Sensor (HO2S) Circuit Closed Loop (CL) Performance Bank 2 Sensor 1",
+    "description": "Mercedes-Benz diagnostic trouble code P0150: Heated Oxygen Sensor (HO2S) Circuit Closed Loop (CL) Performance Bank 2 Sensor 1",
+    "probable_causes": [
+      "Heated Oxygen Sensor (HO2S) Circuit Closed Loop (CL) Performance Bank 2 Sensor 1",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0150 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check sensor heater fuse and voltage supply at the sensor connector.",
+      "Measure sensor signal and heater resistance against specification.",
+      "Replace the affected O2 sensor if out of spec; clear codes and verify closed-loop fuel control."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0226",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "APP Sensor 3 Circuit Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0226: APP Sensor 3 Circuit Performance",
+    "probable_causes": [
+      "APP Sensor 3 Circuit Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0226 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0221",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "APP (Throttle Position) Sensor 2 Circuit Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0221: APP (Throttle Position) Sensor 2 Circuit Performance",
+    "probable_causes": [
+      "APP (Throttle Position) Sensor 2 Circuit Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0221 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0217",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Engine Overtemp Condition",
+    "description": "Mercedes-Benz diagnostic trouble code P0217: Engine Overtemp Condition",
+    "probable_causes": [
+      "Engine Overtemp Condition",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0217 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0234",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Turbocharger Engine Overboost Condition",
+    "description": "Mercedes-Benz diagnostic trouble code P0234: Turbocharger Engine Overboost Condition",
+    "probable_causes": [
+      "Turbocharger Engine Overboost Condition",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0234 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Inspect turbo hoses and intercooler for leaks.",
+      "Check boost pressure sensor and wastegate/actuator operation.",
+      "Verify charge air system integrity after repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0170",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Fuel Trim Bank 1",
+    "description": "Mercedes-Benz diagnostic trouble code P0170: Fuel Trim Bank 1",
+    "probable_causes": [
+      "Fuel Trim Bank 1",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0170 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0151",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Heated Oxygen Sensor (HO2S) Circuit Low Voltage Bank 2 Sensor 1",
+    "description": "Mercedes-Benz diagnostic trouble code P0151: Heated Oxygen Sensor (HO2S) Circuit Low Voltage Bank 2 Sensor 1",
+    "probable_causes": [
+      "Heated Oxygen Sensor (HO2S) Circuit Low Voltage Bank 2 Sensor 1",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0151 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check sensor heater fuse and voltage supply at the sensor connector.",
+      "Measure sensor signal and heater resistance against specification.",
+      "Replace the affected O2 sensor if out of spec; clear codes and verify closed-loop fuel control."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0121",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "TP (Throttle position)Sensor Circuit Insufficient Activity",
+    "description": "Mercedes-Benz diagnostic trouble code P0121: TP (Throttle position)Sensor Circuit Insufficient Activity",
+    "probable_causes": [
+      "TP (Throttle position)Sensor Circuit Insufficient Activity",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0121 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0483",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Cooling Fan Rationality Check Malfunction",
+    "description": "Mercedes-Benz diagnostic trouble code P0483: Cooling Fan Rationality Check Malfunction",
+    "probable_causes": [
+      "Cooling Fan Rationality Check Malfunction",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0483 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0620",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Generator Control Circuit Malfunction",
+    "description": "Mercedes-Benz diagnostic trouble code P0620: Generator Control Circuit Malfunction",
+    "probable_causes": [
+      "Generator Control Circuit Malfunction",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0620 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0014",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Camshaft B position timing over advanced or system performance (Bank 1)",
+    "description": "Mercedes-Benz diagnostic trouble code P0014: Camshaft B position timing over advanced or system performance (Bank 1)",
+    "probable_causes": [
+      "Camshaft B position timing over advanced or system performance (Bank 1)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0014 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Inspect camshaft adjuster solenoids and oil supply to phasers.",
+      "Check timing chain stretch indicators and correlation values with a scan tool.",
+      "Repair timing components if correlation is out of specification."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0560",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "System Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0560: System Voltage",
+    "probable_causes": [
+      "System Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0560 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0229",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Throttle Position Sensor 3 Intermittent",
+    "description": "Mercedes-Benz diagnostic trouble code P0229: Throttle Position Sensor 3 Intermittent",
+    "probable_causes": [
+      "Throttle Position Sensor 3 Intermittent",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0229 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0335",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "CKP Sensor A Circuit Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0335: CKP Sensor A Circuit Performance",
+    "probable_causes": [
+      "CKP Sensor A Circuit Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0335 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0605",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Control Module Programming Read Only Memory (ROM)",
+    "description": "Mercedes-Benz diagnostic trouble code P0605: Control Module Programming Read Only Memory (ROM)",
+    "probable_causes": [
+      "Control Module Programming Read Only Memory (ROM)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0605 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0475",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Exhaust Pressure Control Valve Malfunction",
+    "description": "Mercedes-Benz diagnostic trouble code P0475: Exhaust Pressure Control Valve Malfunction",
+    "probable_causes": [
+      "Exhaust Pressure Control Valve Malfunction",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0475 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0179",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Fuel Composition Sensor Circuit High Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0179: Fuel Composition Sensor Circuit High Voltage",
+    "probable_causes": [
+      "Fuel Composition Sensor Circuit High Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0179 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0533",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Air Conditioning (A/C) Refrigerant Pressure Sensor Circuit High Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0533: Air Conditioning (A/C) Refrigerant Pressure Sensor Circuit High Voltage",
+    "probable_causes": [
+      "Air Conditioning (A/C) Refrigerant Pressure Sensor Circuit High Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0533 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0191",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Fuel Rail Pressure Sensor Circuit Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0191: Fuel Rail Pressure Sensor Circuit Performance",
+    "probable_causes": [
+      "Fuel Rail Pressure Sensor Circuit Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0191 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0015",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Camshaft B position timing over retarded (Bank 1)",
+    "description": "Mercedes-Benz diagnostic trouble code P0015: Camshaft B position timing over retarded (Bank 1)",
+    "probable_causes": [
+      "Camshaft B position timing over retarded (Bank 1)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0015 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Inspect camshaft adjuster solenoids and oil supply to phasers.",
+      "Check timing chain stretch indicators and correlation values with a scan tool.",
+      "Repair timing components if correlation is out of specification."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0718",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Input/Turbine Speed Sensor Circuit Intermittent in automatic transmission",
+    "description": "Mercedes-Benz diagnostic trouble code P0718: Input/Turbine Speed Sensor Circuit Intermittent in automatic transmission",
+    "probable_causes": [
+      "Input/Turbine Speed Sensor Circuit Intermittent in automatic transmission",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0718 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check transmission fluid level and condition.",
+      "Inspect speed sensor wiring and transmission control module connections.",
+      "Consult transmission-specific repair data before internal repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0190",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Fuel Rail Pressure Sensor Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P0190: Fuel Rail Pressure Sensor Circuit",
+    "probable_causes": [
+      "Fuel Rail Pressure Sensor Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0190 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P1335",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "CKP Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P1335: CKP Circuit",
+    "probable_causes": [
+      "CKP Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P1335 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0200",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Injector Control Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P0200: Injector Control Circuit",
+    "probable_causes": [
+      "Injector Control Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0200 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P1105",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Secondary Vacuum Sensor Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P1105: Secondary Vacuum Sensor Circuit",
+    "probable_causes": [
+      "Secondary Vacuum Sensor Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P1105 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0711",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "TFT Sensor Circuit Range/Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0711: TFT Sensor Circuit Range/Performance",
+    "probable_causes": [
+      "TFT Sensor Circuit Range/Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0711 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P1234",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Injector Circuit Cylinder 5 Intermittent",
+    "description": "Mercedes-Benz diagnostic trouble code P1234: Injector Circuit Cylinder 5 Intermittent",
+    "probable_causes": [
+      "Injector Circuit Cylinder 5 Intermittent",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P1234 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0356",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Ignition Coil 6 Control Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P0356: Ignition Coil 6 Control Circuit",
+    "probable_causes": [
+      "Ignition Coil 6 Control Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0356 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0044",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "H02S heater control circuit High (Bank 1 sensor 3)",
+    "description": "Mercedes-Benz diagnostic trouble code P0044: H02S heater control circuit High (Bank 1 sensor 3)",
+    "probable_causes": [
+      "H02S heater control circuit High (Bank 1 sensor 3)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0044 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0702",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Transmission Control System Electrical",
+    "description": "Mercedes-Benz diagnostic trouble code P0702: Transmission Control System Electrical",
+    "probable_causes": [
+      "Transmission Control System Electrical",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0702 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check transmission fluid level and condition.",
+      "Inspect speed sensor wiring and transmission control module connections.",
+      "Consult transmission-specific repair data before internal repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P1350",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Ignition Control System",
+    "description": "Mercedes-Benz diagnostic trouble code P1350: Ignition Control System",
+    "probable_causes": [
+      "Ignition Control System",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P1350 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0104",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Mass Air Flow Circuit Intermittent",
+    "description": "Mercedes-Benz diagnostic trouble code P0104: Mass Air Flow Circuit Intermittent",
+    "probable_causes": [
+      "Mass Air Flow Circuit Intermittent",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0104 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0085",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Exhaust valve control solenoid circuit low (Bank 2)",
+    "description": "Mercedes-Benz diagnostic trouble code P0085: Exhaust valve control solenoid circuit low (Bank 2)",
+    "probable_causes": [
+      "Exhaust valve control solenoid circuit low (Bank 2)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0085 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0238",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Turbocharger Boost Sensor Circuit High Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0238: Turbocharger Boost Sensor Circuit High Voltage",
+    "probable_causes": [
+      "Turbocharger Boost Sensor Circuit High Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0238 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Inspect turbo hoses and intercooler for leaks.",
+      "Check boost pressure sensor and wastegate/actuator operation.",
+      "Verify charge air system integrity after repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0721",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Output Speed Sensor Range/Performance in automatic transmission",
+    "description": "Mercedes-Benz diagnostic trouble code P0721: Output Speed Sensor Range/Performance in automatic transmission",
+    "probable_causes": [
+      "Output Speed Sensor Range/Performance in automatic transmission",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0721 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check transmission fluid level and condition.",
+      "Inspect speed sensor wiring and transmission control module connections.",
+      "Consult transmission-specific repair data before internal repairs."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0740",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "TCC Enable Solenoid Circuit Electrical",
+    "description": "Mercedes-Benz diagnostic trouble code P0740: TCC Enable Solenoid Circuit Electrical",
+    "probable_causes": [
+      "TCC Enable Solenoid Circuit Electrical",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0740 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check transmission fluid level and condition.",
+      "Inspect speed sensor wiring and transmission control module connections.",
+      "Consult transmission-specific repair data before internal repairs."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0056",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Heated Oxygen Sensor (HO2S) Heater Circuit Bank 2 Sensor 2",
+    "description": "Mercedes-Benz diagnostic trouble code P0056: Heated Oxygen Sensor (HO2S) Heater Circuit Bank 2 Sensor 2",
+    "probable_causes": [
+      "Heated Oxygen Sensor (HO2S) Heater Circuit Bank 2 Sensor 2",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0056 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Check sensor heater fuse and voltage supply at the sensor connector.",
+      "Measure sensor signal and heater resistance against specification.",
+      "Replace the affected O2 sensor if out of spec; clear codes and verify closed-loop fuel control."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0068",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Throttle Body Airflow Performance (PCM)",
+    "description": "Mercedes-Benz diagnostic trouble code P0068: Throttle Body Airflow Performance (PCM)",
+    "probable_causes": [
+      "Throttle Body Airflow Performance (PCM)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0068 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0198",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Engine Oil Temperature Sensor High Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0198: Engine Oil Temperature Sensor High Voltage",
+    "probable_causes": [
+      "Engine Oil Temperature Sensor High Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0198 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0522",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Engine Oil Pressure Sensor/Switch Circuit Low Voltage",
+    "description": "Mercedes-Benz diagnostic trouble code P0522: Engine Oil Pressure Sensor/Switch Circuit Low Voltage",
+    "probable_causes": [
+      "Engine Oil Pressure Sensor/Switch Circuit Low Voltage",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0522 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0480",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Cooling Fan Relay 1 Control Circuit",
+    "description": "Mercedes-Benz diagnostic trouble code P0480: Cooling Fan Relay 1 Control Circuit",
+    "probable_causes": [
+      "Cooling Fan Relay 1 Control Circuit",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0480 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0038",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "H02S heater control circuit high (Bank 1 sensor 2)",
+    "description": "Mercedes-Benz diagnostic trouble code P0038: H02S heater control circuit high (Bank 1 sensor 2)",
+    "probable_causes": [
+      "H02S heater control circuit high (Bank 1 sensor 2)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0038 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0100",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "MAF Sensor Circuit Insufficient Activity",
+    "description": "Mercedes-Benz diagnostic trouble code P0100: MAF Sensor Circuit Insufficient Activity",
+    "probable_causes": [
+      "MAF Sensor Circuit Insufficient Activity",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0100 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0062",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "H02S heater control circuit (Bank 2 sensor 3)",
+    "description": "Mercedes-Benz diagnostic trouble code P0062: H02S heater control circuit (Bank 2 sensor 3)",
+    "probable_causes": [
+      "H02S heater control circuit (Bank 2 sensor 3)",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0062 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0101",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Mass Air Flow (MAF) Sensor Performance",
+    "description": "Mercedes-Benz diagnostic trouble code P0101: Mass Air Flow (MAF) Sensor Performance",
+    "probable_causes": [
+      "Mass Air Flow (MAF) Sensor Performance",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0101 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Medium",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0067",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Air assisted injector control circuit high",
+    "description": "Mercedes-Benz diagnostic trouble code P0067: Air assisted injector control circuit high",
+    "probable_causes": [
+      "Air assisted injector control circuit high",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0067 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Verify fuel pressure and volume under load.",
+      "Inspect fuel pump relay, filter, and injector wiring.",
+      "Test or replace faulty fuel delivery or injector components as indicated."
+    ],
+    "difficulty": "Hard",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  },
+  {
+    "code": "P0745",
+    "make": "Mercedes-Benz",
+    "engine": "Generic",
+    "title": "Pressure Control Solenoid Malfunction",
+    "description": "Mercedes-Benz diagnostic trouble code P0745: Pressure Control Solenoid Malfunction",
+    "probable_causes": [
+      "Pressure Control Solenoid Malfunction",
+      "Wiring, connector, or sensor/actuator fault in the related circuit",
+      "Component wear or contamination common on higher-mileage vehicles"
+    ],
+    "symptoms": [
+      "Check engine light (MIL) illuminated",
+      "Possible limp mode or reduced performance depending on fault",
+      "Related system performance fault flags in scan data"
+    ],
+    "step_by_step_fix": [
+      "Confirm P0745 with a scan tool; note freeze-frame and readiness monitors.",
+      "Inspect related wiring harness, connectors, and grounds for corrosion or damage.",
+      "Test the suspected component circuit per manufacturer wiring diagrams.",
+      "Repair or replace the faulty part; clear codes and road-test."
+    ],
+    "difficulty": "Easy",
+    "safety_warning": "Disconnect the battery when working on airbag or SRS-related circuits. Use proper jack stands and allow the engine to cool before exhaust or cooling system work.",
+    "sources": [
+      "Mercedes-Benz code catalog (imported reference list)"
+    ]
+  }
+]

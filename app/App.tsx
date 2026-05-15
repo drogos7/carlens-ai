@@ -1,4 +1,4 @@
-﻿import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,7 +17,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { analyzeErrorImage, lookupDiagnosticCode, type AnalyzeResponse } from './lib/api';
+import {
+  analyzeErrorImage,
+  lookupDiagnosticCode,
+  type AnalyzeResponse,
+  type DecodeSegment,
+} from './lib/api';
 import { colors, font, radius, space } from './theme/tokens';
 
 const amberGradient = [colors.accent, colors.accentDark] as const;
@@ -162,6 +167,33 @@ function StepItem({ index, text }: { index: number; text: string }) {
   );
 }
 
+function DecodeBreakdown({
+  title,
+  summary,
+  segments,
+}: {
+  title: string;
+  summary: string;
+  segments: DecodeSegment[];
+}) {
+  return (
+    <View style={styles.decodeCard}>
+      <CardEyebrow icon="◇" label={title} />
+      <Text style={styles.decodeSummary}>{summary}</Text>
+      {segments.map((seg, idx) => (
+        <View key={`${seg.label}-${idx}`} style={styles.decodeRow}>
+          <View style={styles.decodeMeta}>
+            <Text style={styles.decodePos}>{seg.positions ?? seg.position ?? ''}</Text>
+            <Text style={styles.decodeVal}>{seg.value}</Text>
+          </View>
+          <Text style={styles.decodeLabel}>{seg.label}</Text>
+          <Text style={styles.decodeMeaning}>{seg.meaning}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function UploadGlyph() {
   return (
     <View style={styles.uploadGlyph}>
@@ -246,7 +278,7 @@ export default function App() {
   const lookupCode = useCallback(async () => {
     const code = codeInput.trim();
     if (!code) {
-      setErrorMessage('Enter a code, for example P0420.');
+      setErrorMessage('Enter an OBD code (e.g. P0420) or a 17-character VIN.');
       return;
     }
     setLookupLoading(true);
@@ -351,14 +383,14 @@ export default function App() {
                 </Pressable>
 
                 <View style={styles.lookupBlock}>
-                  <Text style={styles.lookupLabel}>Already know the code?</Text>
+                  <Text style={styles.lookupLabel}>Already know the code or VIN?</Text>
                   <View style={styles.lookupRow}>
                     <TextInput
                       value={codeInput}
                       onChangeText={setCodeInput}
                       autoCapitalize="characters"
                       autoCorrect={false}
-                      placeholder="e.g: P0420"
+                      placeholder="P0420 or 17-char VIN"
                       placeholderTextColor={colors.textFaint}
                       style={styles.codeInput}
                     />
@@ -407,8 +439,18 @@ export default function App() {
                             .join(' · ')}
                         </Text>
                       ) : null}
-                      <Text style={styles.codeDescription}>{result.probable_cause}</Text>
+                      {result.scan_type !== 'vin' ? (
+                        <Text style={styles.codeDescription}>{result.probable_cause}</Text>
+                      ) : null}
                     </View>
+
+                    {result.dtc_decode ? (
+                      <DecodeBreakdown
+                        title="OBD code structure"
+                        summary={result.dtc_decode.summary}
+                        segments={result.dtc_decode.segments}
+                      />
+                    ) : null}
 
                     {result.scan_type !== 'vin' ? (
                       <View style={styles.section}>
@@ -861,6 +903,54 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 4,
     marginBottom: 4,
+  },
+  decodeCard: {
+    borderRadius: radius.lg,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceInset,
+    padding: space.lg,
+    gap: space.sm,
+  },
+  decodeSummary: {
+    color: colors.textSecondary,
+    fontSize: font.caption,
+    lineHeight: 18,
+    marginBottom: space.xs,
+  },
+  decodeRow: {
+    paddingVertical: space.sm,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.divider,
+    gap: 4,
+  },
+  decodeMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  decodePos: {
+    color: colors.textMuted,
+    fontSize: font.nano,
+    fontFamily: monoFont,
+    minWidth: 28,
+  },
+  decodeVal: {
+    color: colors.accent,
+    fontSize: font.caption,
+    fontWeight: '600',
+    fontFamily: monoFont,
+    letterSpacing: 0.6,
+  },
+  decodeLabel: {
+    color: colors.textPrimary,
+    fontSize: font.caption,
+    fontWeight: '500',
+  },
+  decodeMeaning: {
+    color: colors.textMuted,
+    fontSize: font.micro,
+    lineHeight: 17,
   },
   codeDescription: {
     color: colors.textSecondary,

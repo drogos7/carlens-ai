@@ -1,0 +1,10 @@
+{
+  "slug": "bmw",
+  "name": "BMW",
+  "sort_order": 20,
+  "wmi_prefixes": ["WBA", "WBS", "WBX", "WBY", "WBM"],
+  "code_patterns": {
+    "obd": ["[PCBU][0-3][0-9A-F]{3}"],
+    "manufacturer_hex": "E[0-9A-F]{5}"
+  }
+}

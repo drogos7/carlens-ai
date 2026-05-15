@@ -1,0 +1,10 @@
+{
+  "slug": "mercedes-benz",
+  "name": "Mercedes-Benz",
+  "sort_order": 10,
+  "wmi_prefixes": ["WDD", "WDB", "WDC", "WDF", "W1K", "W1N"],
+  "code_patterns": {
+    "obd": ["[PCBU][0-3][0-9A-F]{3}"],
+    "manufacturer_hex": null
+  }
+}
