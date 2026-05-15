@@ -118,11 +118,33 @@ class DtcDecodeResponse(BaseModel):
     segments: list[DtcSegmentResponse]
 
 
+class CodeDependency(BaseModel):
+    """Relationship between two detected codes."""
+    from_code: str
+    to_code: str
+    relation: Literal["root_cause", "symptom", "related", "same_system"]
+    explanation: str
+
+
+class DetectedCodeEntry(BaseModel):
+    """One detected fault code with its DB lookup result (if available)."""
+    code: str
+    title: str | None = None
+    description: str | None = None
+    probable_causes: list[str] = Field(default_factory=list)
+    symptoms: list[str] = Field(default_factory=list)
+    step_by_step_fix: list[str] = Field(default_factory=list)
+    difficulty: Literal["Easy", "Medium", "Hard"] | None = None
+    safety_warning: str | None = None
+    in_database: bool = False
+    brand_slug: str | None = None
+
+
 class AnalyzeErrorResponse(BaseModel):
     """Structured response returned to API clients."""
 
     scan_type: Literal["dtc", "vin"] = Field(default="dtc", description="Whether the scan matched a DTC or a VIN.")
-    detected_code: str = Field(description="OBD-II code (dtc) or VIN string (vin).")
+    detected_code: str = Field(description="Primary OBD-II code (dtc) or VIN string (vin).")
     detected_vin: str | None = Field(default=None, description="17-character VIN when scan_type is vin.")
     vehicle_make: str | None = None
     vehicle_model: str | None = None
@@ -130,6 +152,8 @@ class AnalyzeErrorResponse(BaseModel):
     vehicle_year: int | None = None
     vin_decode: VinDecodeResponse | None = None
     dtc_decode: DtcDecodeResponse | None = None
+    additional_codes: list[DetectedCodeEntry] = Field(default_factory=list)
+    dependencies: list[CodeDependency] = Field(default_factory=list)
     probable_cause: str
     step_by_step_fix: list[str] = Field(default_factory=list)
     estimated_difficulty: Literal["Easy", "Medium", "Hard"]
@@ -198,6 +222,10 @@ class KnowledgeSearchResponse(BaseModel):
     query: str
     count: int
     results: list[DiagnosticCodeResponse]
+
+
+class LookupQueryBody(BaseModel):
+    q: str = Field(description="Fault code or VIN to look up (OBD-II, BMW E+hex, or 17-char VIN).")
 
 
 class SourceMentionResponse(BaseModel):
@@ -309,38 +337,241 @@ def _dtc_decode_to_response(code: str) -> DtcDecodeResponse | None:
     )
 
 
-def _diagnostic_to_analyze_response(item: DiagnosticCodeResponse) -> AnalyzeErrorResponse:
+def _diagnostic_to_analyze_response(
+    item: DiagnosticCodeResponse,
+    all_codes: list[str] | None = None,
+    brand_slug: str | None = None,
+) -> AnalyzeErrorResponse:
+    others = [c for c in (all_codes or []) if c != item.code]
+    additional = [_build_detected_code_entry(c, brand_slug=brand_slug) for c in others]
+    all_for_deps = [item.code, *others]
+    dependencies = _analyze_dependencies(all_for_deps)
+
+    lines = [item.title, item.description, *item.probable_causes]
+    dep_notes = [d.explanation for d in dependencies if d.from_code == item.code or d.to_code == item.code]
+    if dep_notes:
+        lines.append("")
+        lines.extend(dep_notes)
+
+    steps = list(item.step_by_step_fix)
+    root_causes = [d for d in dependencies if d.relation == "root_cause"]
+    if root_causes:
+        rc = root_causes[0]
+        steps.insert(0, f"Priority: fix {rc.from_code} first — it may be the root cause of {rc.to_code}.")
+
     return AnalyzeErrorResponse(
         scan_type="dtc",
         detected_code=item.code,
         dtc_decode=_dtc_decode_to_response(item.code),
-        probable_cause="\n".join([item.title, item.description, *item.probable_causes]),
-        step_by_step_fix=item.step_by_step_fix,
+        additional_codes=additional,
+        dependencies=dependencies,
+        probable_cause="\n".join(line for line in lines if line),
+        step_by_step_fix=steps,
         estimated_difficulty=item.difficulty,
         safety_warning=item.safety_warning,
     )
 
 
-def _unknown_manufacturer_code_response(primary: str, all_codes: list[str]) -> AnalyzeErrorResponse:
-    others = [code for code in all_codes if code != primary]
-    lines = [
-        f"BMW manufacturer-specific fault code {primary} detected on the diagnostic display.",
-    ]
+CODE_SYSTEM_GROUPS: dict[str, str] = {
+    "0": "fuel_air",
+    "1": "fuel_air",
+    "2": "fuel_air",
+    "3": "ignition",
+    "4": "emissions",
+    "5": "speed_idle",
+    "6": "computer",
+    "7": "transmission",
+    "8": "transmission",
+    "9": "transmission",
+    "A": "hybrid",
+    "B": "hybrid",
+    "C": "hybrid",
+}
+
+BMW_SYSTEM_GROUPS: dict[str, str] = {
+    "E12": "transmission",
+    "E11": "network",
+    "E114": "sensor",
+    "E7C": "battery",
+}
+
+SYSTEM_LABELS: dict[str, str] = {
+    "fuel_air": "Fuel / air metering",
+    "ignition": "Ignition / misfire",
+    "emissions": "Emissions control",
+    "speed_idle": "Speed / idle control",
+    "computer": "Computer / output",
+    "transmission": "Transmission",
+    "hybrid": "Hybrid / EV",
+    "network": "Network / communication",
+    "sensor": "Sensor / plausibility",
+    "battery": "Battery management",
+    "body": "Body systems",
+    "chassis": "Chassis / ABS / ESP",
+    "unknown": "Unknown system",
+}
+
+
+def _code_system_group(code: str) -> str:
+    upper = code.upper()
+    if upper.startswith("E") and len(upper) == 6:
+        for prefix, group in BMW_SYSTEM_GROUPS.items():
+            if upper.startswith(prefix):
+                return group
+        return "unknown"
+    if len(upper) == 5 and upper[0] in "PCBU":
+        category = upper[0]
+        if category == "P":
+            return CODE_SYSTEM_GROUPS.get(upper[2], "unknown")
+        if category == "C":
+            return "chassis"
+        if category == "B":
+            return "body"
+        if category == "U":
+            return "network"
+    return "unknown"
+
+
+def _analyze_dependencies(codes: list[str]) -> list[CodeDependency]:
+    if len(codes) < 2:
+        return []
+
+    deps: list[CodeDependency] = []
+    groups: dict[str, list[str]] = {}
+    for code in codes:
+        grp = _code_system_group(code)
+        groups.setdefault(grp, []).append(code)
+
+    network_codes = groups.get("network", [])
+    non_network = [c for c in codes if c not in network_codes]
+
+    if network_codes and non_network:
+        for nc in network_codes:
+            for other in non_network:
+                deps.append(CodeDependency(
+                    from_code=nc,
+                    to_code=other,
+                    relation="root_cause",
+                    explanation=(
+                        f"Communication fault {nc} can prevent modules from reporting correctly, "
+                        f"causing {other} as a secondary symptom. Fix {nc} first."
+                    ),
+                ))
+
+    for grp, grp_codes in groups.items():
+        if grp == "network" or len(grp_codes) < 2:
+            continue
+        label = SYSTEM_LABELS.get(grp, grp)
+        for i, a in enumerate(grp_codes):
+            for b in grp_codes[i + 1:]:
+                deps.append(CodeDependency(
+                    from_code=a,
+                    to_code=b,
+                    relation="same_system",
+                    explanation=f"Both {a} and {b} belong to {label} — likely a shared root cause.",
+                ))
+
+    battery_codes = groups.get("battery", [])
+    sensor_codes = groups.get("sensor", [])
+    if battery_codes and sensor_codes:
+        for bc in battery_codes:
+            for sc in sensor_codes:
+                deps.append(CodeDependency(
+                    from_code=bc,
+                    to_code=sc,
+                    relation="root_cause",
+                    explanation=(
+                        f"Battery/voltage fault {bc} can cause sensor plausibility errors like {sc}. "
+                        "Check battery state first."
+                    ),
+                ))
+
+    return deps
+
+
+def _build_detected_code_entry(code: str, brand_slug: str | None = None) -> DetectedCodeEntry:
+    item = None
+    slugs = [brand_slug] if brand_slug else _brand_slugs_for_scan()
+    for slug in slugs:
+        item = _lookup_code(code, brand_slug=slug)
+        if item:
+            break
+    if not item:
+        for brand in _BRANDS:
+            item = _lookup_code(code, make=brand.name)
+            if item:
+                break
+
+    if item:
+        return DetectedCodeEntry(
+            code=item.code,
+            title=item.title,
+            description=item.description,
+            probable_causes=item.probable_causes,
+            symptoms=item.symptoms,
+            step_by_step_fix=item.step_by_step_fix,
+            difficulty=item.difficulty,
+            safety_warning=item.safety_warning,
+            in_database=True,
+            brand_slug=item.brand_slug or brand_slug,
+        )
+
+    return DetectedCodeEntry(
+        code=code,
+        title=f"Code {code} — not yet in database",
+        in_database=False,
+        brand_slug=brand_slug,
+    )
+
+
+def _multi_code_response(primary: str, all_codes: list[str], brand_slug: str | None = None) -> AnalyzeErrorResponse:
+    primary_entry = _build_detected_code_entry(primary, brand_slug=brand_slug)
+    others = [c for c in all_codes if c != primary]
+    additional = [_build_detected_code_entry(c, brand_slug=brand_slug) for c in others]
+    dependencies = _analyze_dependencies(all_codes)
+
+    if primary_entry.in_database:
+        lines = [primary_entry.title or primary, primary_entry.description or ""]
+        lines.extend(primary_entry.probable_causes)
+    else:
+        lines = [f"Fault code {primary} detected on the diagnostic display."]
+        if not primary_entry.in_database:
+            lines.append("This code is not in the local repair database yet.")
+
     if others:
         lines.append(f"Additional codes on screen: {', '.join(others)}.")
-    lines.append("This code is not in the local repair database yet.")
+
+    dep_notes = []
+    for dep in dependencies:
+        if dep.from_code == primary or dep.to_code == primary:
+            dep_notes.append(dep.explanation)
+    if dep_notes:
+        lines.append("")
+        lines.extend(dep_notes)
+
+    steps = list(primary_entry.step_by_step_fix) if primary_entry.step_by_step_fix else []
+    if not steps:
+        steps = [
+            f"Look up {primary} in manufacturer documentation (ISTA for BMW, XENTRY for Mercedes).",
+            "Address the root-cause code first if dependency analysis indicates one.",
+            "Clear faults after repair and confirm they do not return after a drive cycle.",
+        ]
+    if dependencies:
+        root_causes = [d for d in dependencies if d.relation == "root_cause"]
+        if root_causes:
+            rc = root_causes[0]
+            steps.insert(0, f"Priority: fix {rc.from_code} first — it may be the root cause of {rc.to_code}.")
+
     return AnalyzeErrorResponse(
         scan_type="dtc",
         detected_code=primary,
-        probable_cause="\n".join(lines),
-        step_by_step_fix=[
-            f"Look up BMW code {primary} in ISTA, technical documentation, or a BMW-specific forum.",
-            "Address the highest-priority / recurring code first if multiple faults are present.",
-            "Clear faults after repair and confirm they do not return after a drive cycle.",
-        ],
-        estimated_difficulty="Medium",
-        safety_warning=(
-            "BMW hex codes (E-prefix) are manufacturer-specific. Verify with official BMW diagnostics "
+        additional_codes=additional,
+        dependencies=dependencies,
+        probable_cause="\n".join(line for line in lines if line),
+        step_by_step_fix=steps,
+        estimated_difficulty=primary_entry.difficulty or "Medium",
+        safety_warning=primary_entry.safety_warning or (
+            "Multiple fault codes detected. Verify with manufacturer-level diagnostics "
             "before replacing major components."
         ),
     )
@@ -584,6 +815,34 @@ def _manufacturer_codes_from_text(text: str) -> list[str]:
         if code not in codes:
             codes.append(code)
     return codes
+
+
+def _parse_bmw_manufacturer_hex_manual(raw: str) -> str | None:
+    """Normalize manual entry to E + 5 hex (BMW iDrive hex codes)."""
+    cleaned = re.sub(r"[^A-Za-z0-9]", "", raw).upper()
+    if len(cleaned) != 6 or cleaned[0] != "E":
+        return None
+    normalized = cleaned[0] + cleaned[1:].replace("O", "0").replace("I", "1").replace("L", "1")
+    if re.fullmatch(r"E[0-9A-F]{5}", normalized):
+        return normalized
+    return None
+
+
+def _lookup_code_cross_brand(code: str, make: str | None = None) -> DiagnosticCodeResponse | None:
+    """Same search order as OCR scan: brand_slug iteration, optional make hint, then all known makes."""
+    for slug in _brand_slugs_for_scan():
+        hit = _lookup_code(code, brand_slug=slug)
+        if hit:
+            return hit
+    if make:
+        hit = _lookup_code(code, make=make)
+        if hit:
+            return hit
+    for brand in _BRANDS:
+        hit = _lookup_code(code, make=brand.name)
+        if hit:
+            return hit
+    return None
 
 
 def _text_indicates_fault_code_screen(text: str) -> bool:
@@ -1453,6 +1712,7 @@ async def health() -> dict[str, str | bool]:
         "status": "ok",
         "vision_configured": configured,
         "llm_provider": settings.llm_provider.value,
+        "lookup_supports_bmw_hex": True,
         "message": (
             "Vision API ready."
             if configured
@@ -1503,17 +1763,12 @@ async def get_code_sources(code: str) -> list[SourceMentionResponse]:
     return _source_mentions_for_code(code)
 
 
-@app.get("/lookup", response_model=AnalyzeErrorResponse)
-async def lookup_manual(q: str, make: str | None = "Mercedes-Benz") -> AnalyzeErrorResponse:
-    """
-    Look up a 5-character OBD-II code or 17-character VIN entered manually.
-    Returns DTC structure decode (dtc_decode) when applicable; VIN lookups return vehicle info only.
-    """
-    raw = q.strip()
+def _lookup_manual_impl(raw_input: str, make: str | None = None) -> AnalyzeErrorResponse:
+    raw = raw_input.strip()
     if not raw:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Enter an OBD-II code (e.g. P0420) or a 17-character VIN.",
+            detail="Enter an OBD-II code (e.g. P0420), a BMW hex code (e.g. E12C11), or a 17-character VIN.",
         )
 
     normalized_vin = _normalize_vin_chars(raw)[:VIN_LENGTH]
@@ -1532,16 +1787,29 @@ async def lookup_manual(q: str, make: str | None = "Mercedes-Benz") -> AnalyzeEr
             detail=f"Invalid VIN: {raw!r}",
         )
 
+    mfg_hex = _parse_bmw_manufacturer_hex_manual(raw)
+    if mfg_hex:
+        item = _lookup_code_cross_brand(mfg_hex, make=make)
+        brand_slug = "bmw"
+        if item:
+            slug = item.brand_slug or slug_for_make(item.make, _BRANDS) or brand_slug
+            return _diagnostic_to_analyze_response(item, all_codes=[mfg_hex], brand_slug=slug)
+        return _multi_code_response(mfg_hex, [mfg_hex], brand_slug=brand_slug)
+
     code = _normalize_code(raw)
     if len(code) != 5:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Enter a 5-character OBD code (e.g. P0420) or a full 17-character VIN.",
+            detail=(
+                "Enter a 5-character OBD code (e.g. P0420), a BMW hex code (e.g. E12C11), "
+                "or a full 17-character VIN."
+            ),
         )
 
-    item = _lookup_code(code, make=make)
+    item = _lookup_code_cross_brand(code, make=make)
     if item:
-        return _diagnostic_to_analyze_response(item)
+        slug = item.brand_slug or slug_for_make(item.make, _BRANDS)
+        return _diagnostic_to_analyze_response(item, all_codes=[code], brand_slug=slug)
 
     dtc_decoded = _dtc_decode_to_response(code)
     if dtc_decoded:
@@ -1566,8 +1834,26 @@ async def lookup_manual(q: str, make: str | None = "Mercedes-Benz") -> AnalyzeEr
 
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        detail=f"Could not interpret {raw!r} as an OBD-II code or VIN.",
+        detail=f"Could not interpret {raw!r} as an OBD-II code, BMW hex code, or VIN.",
     )
+
+
+@app.get("/lookup", response_model=AnalyzeErrorResponse)
+async def lookup_manual_get(q: str, make: str | None = None) -> AnalyzeErrorResponse:
+    """
+    Look up a fault code or VIN entered manually.
+    Accepts 5-character OBD-II (P/C/B/U), BMW 6-character hex codes (E + 5 hex), or 17-character VIN.
+    When make is omitted, all brand libraries are searched (same behaviour as OCR scan).
+
+    Prefer `POST /lookup` with JSON `{"q": "E12C11"}` from the Expo app — avoids CDN/proxy stripping query params on some setups.
+    """
+    return _lookup_manual_impl(q, make)
+
+
+@app.post("/lookup", response_model=AnalyzeErrorResponse)
+async def lookup_manual_post(body: LookupQueryBody, make: str | None = None) -> AnalyzeErrorResponse:
+    """Same as GET /lookup; JSON body avoids caching issues."""
+    return _lookup_manual_impl(body.q, make)
 
 
 @app.get("/vins/{vin}/decode", response_model=VinDecodeResponse)
@@ -1655,8 +1941,12 @@ async def scan_error_local(image: UploadFile = File(..., description="Diagnostic
             },
         )
 
-    item = None
     inferred = _infer_brand_slug_from_scan(text)
+    all_detected = candidates if candidates else [code]
+    if code not in all_detected:
+        all_detected = [code, *all_detected]
+
+    item = None
     lookup_slugs = [inferred] if inferred else []
     lookup_slugs.extend(slug for slug in _brand_slugs_for_scan() if slug not in lookup_slugs)
     for slug in lookup_slugs:
@@ -1668,22 +1958,28 @@ async def scan_error_local(image: UploadFile = File(..., description="Diagnostic
             item = _lookup_code(code, make=brand.name)
             if item:
                 break
-    if not item:
-        mfg_codes = _manufacturer_codes_from_text(text)
-        if code in mfg_codes or code.startswith("E"):
-            return _unknown_manufacturer_code_response(code, mfg_codes or candidates)
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": f"OCR found {code}, but the code is not in the local DB yet.",
-                "detected_candidates": candidates,
-                "ocr_text": text,
-                "dtc_decode": (
-                    (decoded := _dtc_decode_to_response(code)).model_dump() if decoded else None
-                ),
-            },
-        )
-    return _diagnostic_to_analyze_response(item)
+
+    if item:
+        return _diagnostic_to_analyze_response(item, all_codes=all_detected, brand_slug=inferred)
+
+    mfg_codes = _manufacturer_codes_from_text(text)
+    if code in mfg_codes or code.startswith("E"):
+        return _multi_code_response(code, mfg_codes or all_detected, brand_slug=inferred)
+
+    if len(all_detected) > 1:
+        return _multi_code_response(code, all_detected, brand_slug=inferred)
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={
+            "message": f"OCR found {code}, but the code is not in the local DB yet.",
+            "detected_candidates": candidates,
+            "ocr_text": text,
+            "dtc_decode": (
+                (decoded := _dtc_decode_to_response(code)).model_dump() if decoded else None
+            ),
+        },
+    )
 
 
 @app.post("/scan-error-local/debug", response_model=LocalScanDebugResponse)
