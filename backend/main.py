@@ -199,7 +199,56 @@ def _candidate_codes_from_text(text: str) -> list[str]:
     return candidates
 
 
-def _extract_text_with_local_ocr(image_bytes: bytes, suffix: str = ".jpg") -> str:
+def _known_codes() -> list[str]:
+    with _db_connection() as conn:
+        rows = conn.execute("SELECT DISTINCT code FROM diagnostic_codes ORDER BY code").fetchall()
+    return [str(row["code"]) for row in rows]
+
+
+def _known_code_matches_from_text(text: str) -> list[str]:
+    normalized_text = re.sub(r"[^A-Za-z0-9]", "", text).upper()
+    matches: list[str] = []
+    for code in _known_codes():
+        variants = {
+            code,
+            code.replace("0", "O"),
+            code.replace("1", "I"),
+            code.replace("1", "L"),
+        }
+        if any(variant in normalized_text for variant in variants) and code not in matches:
+            matches.append(code)
+    return matches
+
+
+def _image_variants(image_bytes: bytes, suffix: str) -> list[tuple[str, bytes]]:
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return [("original", image_bytes)]
+
+    arr = np.frombuffer(image_bytes, dtype=np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if img is None:
+        return [("original", image_bytes)]
+
+    variants: list[tuple[str, bytes]] = [("original", image_bytes)]
+    scale = 3 if max(img.shape[:2]) < 1200 else 2
+    enlarged = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+    _, binary = cv2.threshold(clahe, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    inverted = cv2.bitwise_not(binary)
+
+    encode_ext = ".png" if suffix.lower() == ".png" else ".jpg"
+    for name, image in [("enlarged", enlarged), ("gray-contrast", clahe), ("binary", binary), ("inverted", inverted)]:
+        ok, encoded = cv2.imencode(encode_ext, image)
+        if ok:
+            variants.append((name, encoded.tobytes()))
+    return variants
+
+
+def _run_rapidocr(image_bytes: bytes, suffix: str) -> str:
     try:
         from rapidocr_onnxruntime import RapidOCR
     except ImportError as exc:
@@ -229,13 +278,28 @@ def _extract_text_with_local_ocr(image_bytes: bytes, suffix: str = ".jpg") -> st
                 score_value = float(score)
             except (TypeError, ValueError):
                 score_value = 1
-            if isinstance(text, str) and text.strip() and score_value >= 0.35:
+            if isinstance(text, str) and text.strip() and score_value >= 0.25:
                 parts.append(text.strip())
     return "\n".join(parts)
 
 
+def _extract_text_with_local_ocr(image_bytes: bytes, suffix: str = ".jpg") -> str:
+    texts: list[str] = []
+    for name, variant_bytes in _image_variants(image_bytes, suffix):
+        variant_text = _run_rapidocr(variant_bytes, suffix)
+        if variant_text.strip():
+            texts.append(f"[{name}]\n{variant_text}")
+        if _known_code_matches_from_text(variant_text) or _candidate_codes_from_text(variant_text):
+            break
+    return "\n\n".join(texts)
+
+
 def _detect_known_code_from_text(text: str) -> tuple[str | None, list[str]]:
-    candidates = _candidate_codes_from_text(text)
+    known_matches = _known_code_matches_from_text(text)
+    candidates = [*known_matches]
+    for candidate in _candidate_codes_from_text(text):
+        if candidate not in candidates:
+            candidates.append(candidate)
     for candidate in candidates:
         if _lookup_code(candidate, make="Mercedes-Benz"):
             return candidate, candidates

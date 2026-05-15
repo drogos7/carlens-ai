@@ -114,9 +114,12 @@ export default function App() {
       const anyErr = e as Error & { status?: number; body?: unknown };
       let message = formatApiError(e);
       if (anyErr.status === 422 && anyErr.body && typeof anyErr.body === 'object') {
-        const detail = (anyErr.body as { detail?: { hints?: string[] } }).detail;
+        const detail = (anyErr.body as { detail?: { hints?: string[]; ocr_text?: string } }).detail;
         if (detail && typeof detail === 'object' && Array.isArray(detail.hints)) {
           message = [message, ...detail.hints].join('\n• ');
+        }
+        if (detail && typeof detail === 'object' && typeof detail.ocr_text === 'string' && detail.ocr_text.trim()) {
+          message = `${message}\n\nOCR text:\n${detail.ocr_text.trim().slice(0, 500)}`;
         }
       }
       setErrorMessage(message);
