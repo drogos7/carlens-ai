@@ -191,13 +191,20 @@ def _candidate_codes_from_text(text: str) -> list[str]:
     candidates: list[str] = []
     # DTCs are P/C/B/U + digit 0-3 + 3 hex-like chars. This rejects UI text like "B0SSC".
     pattern = re.compile(r"[PCBU][0-3OIL][0-9A-FIO]{3}")
-    # Also collect invalid-looking P/C/B/U words for fuzzy correction, e.g. OCR P8428 -> P0420.
-    fuzzy_pattern = re.compile(r"[PCBU][0-9A-Z]{4}")
     for source in (text.upper(), compact):
         for match in pattern.findall(source):
             code = _normalize_code(match)
             if len(code) == 5 and code not in candidates:
                 candidates.append(code)
+    return candidates
+
+
+def _fuzzy_candidate_codes_from_text(text: str) -> list[str]:
+    compact = re.sub(r"[^A-Za-z0-9]", "", text).upper()
+    candidates: list[str] = []
+    # Invalid-looking P/C/B/U words are used only to correct to known DB codes.
+    fuzzy_pattern = re.compile(r"[PCBU][0-9A-Z]{4}")
+    for source in (text.upper(), compact):
         for match in fuzzy_pattern.findall(source):
             code = _normalize_code(match)
             if len(code) == 5 and code not in candidates:
@@ -331,24 +338,30 @@ def _extract_text_with_local_ocr(image_bytes: bytes, suffix: str = ".jpg") -> st
         variant_text = _run_rapidocr(variant_bytes, suffix)
         if variant_text.strip():
             texts.append(f"[{name}]\n{variant_text}")
-        if _known_code_matches_from_text(variant_text) or _candidate_codes_from_text(variant_text):
+        if (
+            _known_code_matches_from_text(variant_text)
+            or _candidate_codes_from_text(variant_text)
+            or _fuzzy_known_code_matches(_fuzzy_candidate_codes_from_text(variant_text))
+        ):
             break
     return "\n\n".join(texts)
 
 
 def _detect_known_code_from_text(text: str) -> tuple[str | None, list[str]]:
     known_matches = _known_code_matches_from_text(text)
+    strict_candidates = _candidate_codes_from_text(text)
+    fuzzy_candidates = _fuzzy_candidate_codes_from_text(text)
     candidates = [*known_matches]
-    for candidate in _candidate_codes_from_text(text):
+    for candidate in strict_candidates:
         if candidate not in candidates:
             candidates.append(candidate)
-    for match in _fuzzy_known_code_matches(candidates):
+    for match in _fuzzy_known_code_matches([*strict_candidates, *fuzzy_candidates]):
         if match not in candidates:
             candidates.insert(0, match)
     for candidate in candidates:
         if _lookup_code(candidate, make="Mercedes-Benz"):
             return candidate, candidates
-    return (candidates[0], candidates) if candidates else (None, candidates)
+    return (strict_candidates[0], candidates) if strict_candidates else (None, candidates)
 
 
 def _init_knowledge_db() -> None:
